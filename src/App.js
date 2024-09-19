@@ -106,14 +106,10 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <h1 style={{ 
-            fontSize: '2.5em', 
-            fontWeight: 'bold',
-            color: '#CCC',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-            marginBottom: '30px'
-          }}>KOL评分表</h1>
-         
+          <div style={{width:"100%"}}>
+            <img src='/head.png'></img>
+          </div>
+          
           <Routes>
             <Route path="/" element={
               <>

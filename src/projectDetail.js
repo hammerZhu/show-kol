@@ -77,23 +77,32 @@ function ProjectDetail() {
   const formattedDate = formatDate(currentDate);
   
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto',padding:'10px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', border: '1px solid #ddd', borderRadius: '10px', padding: '15px' , backgroundColor: '#4CAF50'}}>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '10px', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', border: '1px solid #ddd', borderRadius: '10px', padding: '15px' }}>
         <div style={{ flex: 1 }}>
-          <p>KOL名称：<a href={`https://x.com/${projectInfo.name}`} target="_blank" rel="noopener noreferrer">{projectInfo.name}</a></p>
-          <p>粉丝数 ：{projectInfo.followers}</p>
-          <p>内容分 ：{projectInfo.score}</p>
-          <p>影响力分：{projectInfo.influence}</p> {/* 新增显示影响力分 */}
+          <p style={{ fontSize: '1.2em', fontWeight: 'bold' }}><a href={`https://x.com/${projectInfo.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>{projectInfo.name}</a></p>
+          <div style={{ margin: '10px' , border: '1px solid #ddd', borderRadius: '20px',padding:'10px'}} >
+            粉丝数 ：{projectInfo.followers}
+          </div>
+          <div style={{ margin: '10px' , border: '1px solid #ddd', borderRadius: '20px', padding: '10px'}} >
+            内容分 ：{projectInfo.score}📈
+          </div>
+          <div style={{ margin: '10px' , border: '1px solid #ddd', borderRadius: '20px', padding: '10px'}} >
+            影响力分：{projectInfo.influence}📉 {/* 新增显示影响力分 */}
+          </div>
+          
         </div>
-        <div style={{ flex: 1 }}>
-          <p>KOL简介：{projectInfo.description}</p>
+        <div style={{ flex: 1 ,marginLeft: '20px' ,border: '1px solid #ddd', borderRadius: '10px', padding: '10px'}}>
+          <p>{projectInfo.description}</p>
         </div>
       </div>
-      <div style={{ marginTop: '20px' }}>
+      <div style={{ marginTop: '20px' , border: '1px solid #ddd', borderRadius: '10px', padding: '15px'}}>
+      <div style={{ borderBottom: '1px solid #666', marginBottom: '10px' }}>
         <h3>评论</h3>
+        </div>
         {comments.length > 0 ? (
           comments.map((comment, index) => (
-            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '5px', padding: '10px', marginBottom: '10px' }}>
+            <div key={index} style={{ border: '1px solid #ddd', borderRadius: '5px', padding: '10px', marginBottom: '10px', backgroundColor: '#fff' }}>
               <p>{comment.comment}</p>
               <div style={{ fontSize: '0.8em', color: '#666' }}>
                 <span>From {comment.author}</span> - <span>At {new Date(comment.updatedTime).toLocaleString()}</span>
@@ -104,17 +113,20 @@ function ProjectDetail() {
           <p>该项目目前没有用户评论，欢迎你来评论。</p>
         )}
       </div>
-      <div style={{ marginTop: '20px', border: '1px solid #ddd', borderRadius: '10px', padding: '15px', backgroundColor: 'transparent' }}>
-        <h3 style={{ marginTop: '0' }}>发表看法</h3>
-        <textarea
+      <div style={{ marginTop: '20px' , border: '1px solid #ddd', borderRadius: '10px', padding: '15px'}}>
+        <div style={{ borderBottom: '1px solid #666', marginBottom: '10px' }}>
+          <h3>发表评论</h3>
+        </div>
+        
+       <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          style={{ width: '100%', height: '100px', marginBottom: '10px', padding: '5px' }}
+          style={{ width: '100%', height: '100px', marginBottom: '10px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <div style={{ textAlign: 'center' }}>
-          <button 
-            onClick={handleCommentSubmit} 
-            style={{ 
+          <button
+            onClick={handleCommentSubmit}
+            style={{
               padding: '10px 25px',
               backgroundColor: '#4CAF50',
               color: 'white',
