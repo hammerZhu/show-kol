@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import ProjectDetail from './projectDetail';
-import { sendPostRequest,sendDbRequest } from './myUtils';
+import { sendPostRequest,sendDbRequest,transformScore,reverseTransformScore } from './myUtils';
 import logo from './logo.svg';
 import './App.css';
 
@@ -40,20 +40,7 @@ function App() {
     localStorage.setItem('maxInfluence', maxInfluence);
   }, [currentPage, minScore, maxScore, minInfluence, maxInfluence]);
 
-  const transformScore = (score) => {
-    const maxScore = 1000000;
-    const adjustedScore = Math.min(score, maxScore);
-    const logScore = Math.log(adjustedScore + 1);
-    const maxLogScore = Math.log(maxScore + 1);
-    return (logScore / maxLogScore) * 100;
-  };
-
-  const reverseTransformScore = (normalizedScore) => {
-    const maxScore = 1000000;
-    const maxLogScore = Math.log(maxScore + 1);
-    const logScore = (normalizedScore / 100) * maxLogScore;
-    return Math.exp(logScore) - 1;
-  };
+  
 
   async function fetchData(minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') {
     const minScoreTransformed = minScore !== '' ? reverseTransformScore(parseFloat(minScore)) : '';

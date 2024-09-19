@@ -54,3 +54,18 @@ export function formatDate(date) {
       return null;
     }
   }
+
+  export function transformScore(score){
+    const maxScore = 1000000;
+    const adjustedScore = Math.min(score, maxScore);
+    const logScore = Math.log(adjustedScore + 1);
+    const maxLogScore = Math.log(maxScore + 1);
+    return (logScore / maxLogScore) * 100;
+  };
+
+  export function reverseTransformScore(normalizedScore){
+    const maxScore = 1000000;
+    const maxLogScore = Math.log(maxScore + 1);
+    const logScore = (normalizedScore / 100) * maxLogScore;
+    return Math.exp(logScore) - 1;
+  };
