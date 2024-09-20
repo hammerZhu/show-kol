@@ -93,9 +93,46 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <div style={{width:"100%"}}>
-            <img src='/head.png'></img>
-          </div>
+          <nav style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "justify-content-center",
+            alignItems: "center",
+            padding: "10px 20px",
+            backgroundColor: "#1a1a1a"
+          }}>
+            <div style={{ display: "flex", alignItems: "center",marginLeft:'60px'}}>
+              <img src="/logo.png" alt="Logo" style={{ height: "40px", marginRight: "10px" }} />
+              <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>DISCOVER</span>
+            </div>
+            <div style={{ display: "flex", gap: "20px",marginLeft:'100px',justifyContent:'justify-content-start' }}>
+              {["Projects", "Search"].map((item) => (
+                <Link
+                  key={item}
+                  to="/"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    textDecoration: "none",
+                    color: "white"
+                  }}
+                >
+                  <img
+                    src={`/${item.toLowerCase()}-icon.svg`}
+                    alt={item}
+                    style={{ 
+                      width: "24px", 
+                      height: "24px", 
+                      marginRight: "8px",
+                      filter: "brightness(0) invert(1)" // 这会将SVG变成白色
+                    }}
+                  />
+                  <span>{item}</span>
+                </Link>
+              ))}
+            </div>
+            
+          </nav>
           
           <Routes>
             <Route path="/" element={
@@ -116,7 +153,7 @@ function App() {
                           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                         }}
                       />
-                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; 内 容 分 &lt;</span>
+                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; Content Score &lt;</span>
                       <input
                         type="number"
                         placeholder="100"
@@ -145,7 +182,7 @@ function App() {
                           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                         }}
                       />
-                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; 影响力分 &lt;</span>
+                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; Influence Score &lt;</span>
                       <input
                         type="number"
                         placeholder="100"
@@ -173,7 +210,7 @@ function App() {
                     fontWeight: 'bold',
                     marginLeft: '20px',
                     height: '100%'
-                  }}>搜索</button>
+                  }}>Search</button>
                 </div>
                 {renderTable(sortedItems, handleSort, sortField, sortDirection)}
                 {renderPagination(totalPages, currentPage, paginate)}
@@ -207,16 +244,16 @@ const renderTable = (data, onSort, sortField, sortDirection) => {
       <thead>
         <tr style={{ backgroundColor: '#4CAF50' }}>
           <th onClick={() => onSort('name')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            KOL名称{renderSortIcon('name')}
+            KOL Name{renderSortIcon('name')}
           </th>
           <th onClick={() => onSort('followers')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            粉丝数{renderSortIcon('followers')}
+            Followers{renderSortIcon('followers')}
           </th>
           <th onClick={() => onSort('score')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            内容分{renderSortIcon('score')}
+            Content Score{renderSortIcon('score')}
           </th>
           <th onClick={() => onSort('influence')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            影响力分{renderSortIcon('influence')}
+            Influence Score{renderSortIcon('influence')}
           </th>
         </tr>
       </thead>

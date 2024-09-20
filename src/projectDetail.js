@@ -21,7 +21,7 @@ function ProjectDetail() {
     score: 0,
     followers: 0,
     description: '',
-    influence: 0, // 新增 influence 字段
+    influence: 0,
     influenceAccouunts:[]
   });
   const [comments, setComments] = useState([]);
@@ -45,7 +45,7 @@ function ProjectDetail() {
         score:result.data[0].totalScore,
         followers:result.data[0].followers,
         description:result.data[0].description,
-        influence:result.data[0].influence, // 新增 influence 数据
+        influence:result.data[0].influence,
         influenceAccouunts:influenceAccouunts
       }
       setProjectInfo(data);
@@ -67,15 +67,13 @@ function ProjectDetail() {
   const handleCommentSubmit = async () => {
     if (newComment.trim() === '') return;
 
-    //{comment: string, name:string,stars:number}
     let data={comment:newComment,name:name,stars:5};
     const result = await sendPostRequest('post_kol_comment',JSON.stringify(data));
     if (result && result.success) {
-      // 刷新评论列表
       getComments(name);
       setNewComment('');
     } else {
-      alert('评论发送失败，请重试。');
+      alert('Comment submission failed. Please try again.');
     }
   };
 
@@ -103,22 +101,22 @@ function ProjectDetail() {
             </p>
           </div>
           <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px', marginBottom: '8px' }}>
-            粉丝数：{projectInfo.followers}
+            Followers: {projectInfo.followers}
           </div>
           <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px', marginBottom: '8px' }}>
-            内容分：{transformScore(projectInfo.score).toFixed(2)}📈
+            Content Score: {transformScore(projectInfo.score).toFixed(2)}📈
           </div>
           <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px' }}>
-            影响力分：{transformScore(projectInfo.influence).toFixed(2)}📉
+            Influence Score: {transformScore(projectInfo.influence).toFixed(2)}📉
           </div>
         </div>
-        <div style={{ width: '50%', minWidth: '360px' }}> {/* 添加 minWidth */}
+        <div style={{ width: '50%', minWidth: '360px' }}>
           <div style={{ 
             backgroundColor: '#3a3a3a', 
             borderRadius: '10px', 
             padding: '15px',
             height: '100%',
-            minHeight: '150px', // 添加最小高度
+            minHeight: '150px',
             overflow: 'auto',
             maxHeight: '150px'
           }}>
@@ -127,32 +125,30 @@ function ProjectDetail() {
         </div>
       </div>
       
-      {/* 新增的influenceAccouunts列表 */}
       <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.32em', textAlign: 'left' }}>相关联的账号</h3>
+        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.32em', textAlign: 'left' }}>Related Accounts</h3>
         <div style={{ display: 'flex', maxHeight: '200px', overflowY: 'auto' }}>
           <div style={{ flex: 1, marginRight: '10px' }}>
             {leftInfluenceAccounts.map((account, index) => (
               <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0 }}>{account.name}</p>
-                <p style={{ margin: 0, fontSize: '0.9em', color: '#aaa' }}>粉丝: {account.followers}</p>
+                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#8a2be2' }}>{account.name}</a>
+                <p style={{ margin: 0, fontSize: '0.9em', color: '#aaa' }}>Followers: {account.followers}</p>
               </div>
             ))}
           </div>
           <div style={{ flex: 1 }}>
             {rightInfluenceAccounts.map((account, index) => (
               <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0 }}>{account.name}</p>
-                <p style={{ margin: '4px 0 0', fontSize: '0.9em', color: '#aaa' }}>粉丝: {account.followers}</p>
+                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#8a2be2' }}>{account.name}</a>
+                <p style={{ margin: '4px 0 0', fontSize: '0.9em', color: '#aaa' }}>Followers: {account.followers}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
       
-      {/* 现有的评论区域 */}
       <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>评论</h3>
+        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>Comments</h3>
         {comments.length > 0 ? (
           comments.map((comment, index) => (
             <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '12px', marginBottom: '12px' }}>
@@ -163,11 +159,11 @@ function ProjectDetail() {
             </div>
           ))
         ) : (
-          <p>该项目目前没有用户评论，欢迎你来评论。</p>
+          <p>There are no comments for this project yet. Feel free to leave one.</p>
         )}
       </div>
       <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>发表评论</h3>
+        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>Leave a Comment</h3>
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -188,7 +184,7 @@ function ProjectDetail() {
               transition: 'all 0.3s ease'
             }}
           >
-            发表
+            Submit
           </button>
         </div>
       </div>
