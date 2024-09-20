@@ -21,7 +21,8 @@ function ProjectDetail() {
     score: 0,
     followers: 0,
     description: '',
-    influence: 0 // 新增 influence 字段
+    influence: 0, // 新增 influence 字段
+    influenceAccouunts:[]
   });
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -34,6 +35,11 @@ function ProjectDetail() {
       if(result.data[0].influenceAccouunts.length>0){
         influenceAccouunts=JSON.parse(result.data[0].influenceAccouunts);
       }
+      if(influenceAccouunts==undefined){
+        console.log("influenceAccouunts is undefined");
+      }
+      console.log("influenceAccouunts:");
+      console.log(influenceAccouunts);
       let data={
         name:result.data[0].screen_name,
         score:result.data[0].totalScore,
@@ -80,11 +86,12 @@ function ProjectDetail() {
 
   const currentDate = new Date();
   const formattedDate = formatDate(currentDate);
-  
+  let leftInfluenceAccounts=projectInfo.influenceAccouunts.slice(0, Math.ceil(projectInfo.influenceAccouunts.length / 2));
+  let rightInfluenceAccounts=projectInfo.influenceAccouunts.slice(Math.ceil(projectInfo.influenceAccouunts.length / 2));
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif', backgroundColor: '#1e1e1e', color: '#fff', fontSize: '15.4px' }}>
       <div style={{ display: 'flex', backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <div style={{ width: '50%', marginRight: '20px' }}>
+        <div style={{ width: '50%', marginRight: '20px' , minWidth: '360px'}}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
             <img 
               src="https://pbs.twimg.com/profile_images/1558667234855292929/RqgodvGb_400x400.jpg" 
@@ -105,14 +112,15 @@ function ProjectDetail() {
             影响力分：{transformScore(projectInfo.influence).toFixed(2)}📉
           </div>
         </div>
-        <div style={{ width: '50%' }}>
+        <div style={{ width: '50%', minWidth: '360px' }}> {/* 添加 minWidth */}
           <div style={{ 
             backgroundColor: '#3a3a3a', 
             borderRadius: '10px', 
             padding: '15px',
             height: '100%',
+            minHeight: '150px', // 添加最小高度
             overflow: 'auto',
-            maxHeight: '150px' // 您可以根据需要调整这个值
+            maxHeight: '150px'
           }}>
             <p style={{ margin: 0 }}>{projectInfo.description}</p>
           </div>
@@ -124,7 +132,7 @@ function ProjectDetail() {
         <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.32em', textAlign: 'left' }}>相关联的账号</h3>
         <div style={{ display: 'flex', maxHeight: '200px', overflowY: 'auto' }}>
           <div style={{ flex: 1, marginRight: '10px' }}>
-            {projectInfo.influenceAccouunts.slice(0, Math.ceil(projectInfo.influenceAccouunts.length / 2)).map((account, index) => (
+            {leftInfluenceAccounts.map((account, index) => (
               <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <p style={{ margin: 0 }}>{account.name}</p>
                 <p style={{ margin: 0, fontSize: '0.9em', color: '#aaa' }}>粉丝: {account.followers}</p>
@@ -132,7 +140,7 @@ function ProjectDetail() {
             ))}
           </div>
           <div style={{ flex: 1 }}>
-            {projectInfo.influenceAccouunts.slice(Math.ceil(projectInfo.influenceAccouunts.length / 2)).map((account, index) => (
+            {rightInfluenceAccounts.map((account, index) => (
               <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <p style={{ margin: 0 }}>{account.name}</p>
                 <p style={{ margin: '4px 0 0', fontSize: '0.9em', color: '#aaa' }}>粉丝: {account.followers}</p>
