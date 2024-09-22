@@ -22,13 +22,14 @@ function ProjectDetail() {
     followers: 0,
     description: '',
     influence: 0,
-    influenceAccouunts:[]
+    influenceAccouunts:[],
+    headImage:''
   });
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
 
   const getProjectInfo = async (projectName) => {
-    let sqlstr=`select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
+    let sqlstr=`select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description,x.headImage from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
     let result=await sendDbRequest(sqlstr);
     if(result && result.success){
       let influenceAccouunts=[];
@@ -46,7 +47,8 @@ function ProjectDetail() {
         followers:result.data[0].followers,
         description:result.data[0].description,
         influence:result.data[0].influence,
-        influenceAccouunts:influenceAccouunts
+        influenceAccouunts:influenceAccouunts,
+        headImage:result.data[0].headImage
       }
       setProjectInfo(data);
     }
@@ -92,7 +94,7 @@ function ProjectDetail() {
         <div style={{ width: '50%', marginRight: '20px' , minWidth: '360px'}}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
             <img 
-              src="https://pbs.twimg.com/profile_images/1558667234855292929/RqgodvGb_400x400.jpg" 
+              src={projectInfo.headImage} 
               alt={projectInfo.name} 
               style={{ width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px' }}
             />
