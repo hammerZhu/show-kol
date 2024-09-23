@@ -29,7 +29,7 @@ function ProjectDetail() {
   const [newComment, setNewComment] = useState('');
 
   const getProjectInfo = async (projectName) => {
-    let sqlstr=`select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description,x.headImage from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
+    let sqlstr=`select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description,x.headImage,x.name from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
     let result=await sendDbRequest(sqlstr);
     if(result && result.success){
       let influenceAccouunts=[];
@@ -43,6 +43,7 @@ function ProjectDetail() {
       console.log(influenceAccouunts);
       let data={
         name:result.data[0].screen_name,
+        showName:result.data[0].name,
         score:result.data[0].totalScore,
         followers:result.data[0].followers,
         description:result.data[0].description,
@@ -89,73 +90,66 @@ function ProjectDetail() {
   let leftInfluenceAccounts=projectInfo.influenceAccouunts.slice(0, Math.ceil(projectInfo.influenceAccouunts.length / 2));
   let rightInfluenceAccounts=projectInfo.influenceAccouunts.slice(Math.ceil(projectInfo.influenceAccouunts.length / 2));
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif', backgroundColor: '#1e1e1e', color: '#fff', fontSize: '15.4px' }}>
-      <div style={{ display: 'flex', backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <div style={{ width: '50%', marginRight: '20px' , minWidth: '360px'}}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+    <div className="max-w-4xl mx-auto p-4 font-sans text-white bg-gray-900">
+      <div className="bg-gray-800 rounded-lg p-6 mb-6 flex flex-wrap">
+        <div className="w-full md:w-1/2 pr-4 mb-4 md:mb-0">
+          <div className="flex items-center mb-4">
             <img 
               src={projectInfo.headImage} 
               alt={projectInfo.name} 
-              style={{ width: '50px', height: '50px', borderRadius: '50%', marginRight: '15px' }}
+              className="w-12 h-12 rounded-full mr-4"
             />
-            <p style={{ fontSize: '1.6em', fontWeight: 'bold', margin: 0 }}>
-              <a href={`https://x.com/${projectInfo.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#8a2be2' }}>{projectInfo.name}</a>
-            </p>
+            <div className="text-2xl font-bold flex flex-col">
+              <a href={`https://x.com/${projectInfo.name}`} target="_blank" rel="noopener noreferrer" className="text-purple-500">{projectInfo.showName}</a>
+              <span className="text-gray-500 text-sm">@{projectInfo.name}</span>
+            </div>
           </div>
-          <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px', marginBottom: '8px' }}>
+          <div className="bg-gray-700 rounded-lg p-2 mb-2">
             Followers: {projectInfo.followers}
           </div>
-          <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px', marginBottom: '8px' }}>
+          <div className="bg-gray-700 rounded-lg p-2 mb-2">
             Content Score: {transformScore(projectInfo.score).toFixed(2)}📈
           </div>
-          <div style={{ backgroundColor: '#3a3a3a', borderRadius: '10px', padding: '8px' }}>
+          <div className="bg-gray-700 rounded-lg p-2">
             Influence Score: {transformScore(projectInfo.influence).toFixed(2)}📉
           </div>
         </div>
-        <div style={{ width: '50%', minWidth: '360px' }}>
-          <div style={{ 
-            backgroundColor: '#3a3a3a', 
-            borderRadius: '10px', 
-            padding: '15px',
-            height: '100%',
-            minHeight: '150px',
-            overflow: 'auto',
-            maxHeight: '150px'
-          }}>
-            <p style={{ margin: 0 }}>{projectInfo.description}</p>
+        <div className="w-full md:w-1/2">
+          <div className="bg-gray-700 rounded-lg p-4 h-full overflow-auto max-h-40">
+            <p>{projectInfo.description}</p>
           </div>
         </div>
       </div>
       
-      <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.32em', textAlign: 'left' }}>Related Accounts</h3>
-        <div style={{ display: 'flex', maxHeight: '200px', overflowY: 'auto' }}>
-          <div style={{ flex: 1, marginRight: '10px' }}>
+      <div className="bg-gray-800 rounded-lg p-6 mb-6">
+        <h3 className="text-xl font-semibold mb-4 pb-2 border-b border-gray-600">Related Accounts</h3>
+        <div className="flex flex-wrap max-h-60 overflow-y-auto">
+          <div className="w-full md:w-1/2 pr-2">
             {leftInfluenceAccounts.map((account, index) => (
-              <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#8a2be2' }}>{account.name}</a>
-                <p style={{ margin: 0, fontSize: '0.9em', color: '#aaa' }}>Followers: {account.followers}</p>
+              <div key={index} className="bg-gray-700 rounded p-2 mb-2 flex justify-between items-center">
+                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" className="text-purple-500">{account.name}</a>
+                <p className="text-sm text-gray-400">Followers: {account.followers}</p>
               </div>
             ))}
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="w-full md:w-1/2 pl-2">
             {rightInfluenceAccounts.map((account, index) => (
-              <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" style={{ color: '#8a2be2' }}>{account.name}</a>
-                <p style={{ margin: '4px 0 0', fontSize: '0.9em', color: '#aaa' }}>Followers: {account.followers}</p>
+              <div key={index} className="bg-gray-700 rounded p-2 mb-2 flex justify-between items-center">
+                <a href={`https://x.com/${account.name}`} target="_blank" rel="noopener noreferrer" className="text-purple-500">{account.name}</a>
+                <p className="text-sm text-gray-400">Followers: {account.followers}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
       
-      <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px', marginBottom: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>Comments</h3>
+      <div className="bg-gray-800 rounded-lg p-6 mb-6">
+        <h3 className="text-xl font-semibold mb-4 pb-2 border-b border-gray-600">Comments</h3>
         {comments.length > 0 ? (
           comments.map((comment, index) => (
-            <div key={index} style={{ backgroundColor: '#3a3a3a', borderRadius: '5px', padding: '12px', marginBottom: '12px' }}>
-              <p style={{ margin: 0 }}>{comment.comment}</p>
-              <div style={{ fontSize: '0.8em', color: '#aaa', marginTop: '8px' }}>
+            <div key={index} className="bg-gray-700 rounded p-3 mb-3">
+              <p>{comment.comment}</p>
+              <div className="text-sm text-gray-400 mt-2">
                 <span>From {comment.author}</span> - <span>At {new Date(comment.updatedTime).toLocaleString()}</span>
               </div>
             </div>
@@ -164,27 +158,17 @@ function ProjectDetail() {
           <p>There are no comments for this project yet. Feel free to leave one.</p>
         )}
       </div>
-      <div style={{ backgroundColor: '#2a2a2a', borderRadius: '10px', padding: '20px' }}>
-        <h3 style={{ borderBottom: '1px solid #666', paddingBottom: '10px', marginBottom: '15px', fontSize: '1.2em', textAlign: 'left' }}>Leave a Comment</h3>
+      <div className="bg-gray-800 rounded-lg p-6">
+        <h3 className="text-xl font-semibold mb-4 pb-2 border-b border-gray-600">Leave a Comment</h3>
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          style={{ width: '100%', height: '80px', marginBottom: '12px', padding: '8px', borderRadius: '5px', border: 'none', backgroundColor: '#3a3a3a', color: '#fff', fontSize: '14px' }}
+          className="w-full h-24 mb-4 p-2 rounded bg-gray-700 text-white text-sm resize-none"
         />
-        <div style={{ textAlign: 'center' }}>
+        <div className="text-center">
           <button
             onClick={handleCommentSubmit}
-            style={{
-              padding: '8px 20px',
-              backgroundColor: '#8a2be2',
-              color: 'white',
-              border: 'none',
-              borderRadius: '20px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
+            className="px-6 py-2 bg-purple-600 text-white rounded-full text-sm font-bold cursor-pointer transition duration-300 ease-in-out hover:bg-purple-700"
           >
             Submit
           </button>

@@ -1,10 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import ProjectDetail from './projectDetail';
-import { sendPostRequest,sendDbRequest,transformScore,reverseTransformScore } from './myUtils';
-import logo from './logo.svg';
+import { sendPostRequest, sendDbRequest, transformScore, reverseTransformScore } from './myUtils';
 import './App.css';
-
+import './index.css';
 function App() {
   const [data, setData] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(() => {
@@ -39,8 +38,6 @@ function App() {
     localStorage.setItem('minInfluence', minInfluence);
     localStorage.setItem('maxInfluence', maxInfluence);
   }, [currentPage, minScore, maxScore, minInfluence, maxInfluence]);
-
-  
 
   async function fetchData(minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') {
     const minScoreTransformed = minScore !== '' ? reverseTransformScore(parseFloat(minScore)) : '';
@@ -91,134 +88,87 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
-        <header className="App-header">
-          <nav style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "justify-content-center",
-            alignItems: "center",
-            padding: "10px 20px",
-            backgroundColor: "#1a1a1a"
-          }}>
-            <div style={{ display: "flex", alignItems: "center",marginLeft:'60px'}}>
-              <img src="/logo.png" alt="Logo" style={{ height: "40px", marginRight: "10px" }} />
-              <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>DISCOVER</span>
+      <div className="min-h-screen bg-gray-900 text-white">
+        <header className="bg-gray-800 shadow-lg">
+          <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <img src="/logo.png" alt="Logo" className="h-10 rounded-full" />
+              <span className="text-2xl font-bold">DISCOVER</span>
             </div>
-            <div style={{ display: "flex", gap: "20px",marginLeft:'100px',justifyContent:'justify-content-start' }}>
+            <div className="flex space-x-6">
               {["Projects", "Search"].map((item) => (
                 <Link
                   key={item}
                   to="/"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    textDecoration: "none",
-                    color: "white"
-                  }}
+                  className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
                 >
                   <img
                     src={`/${item.toLowerCase()}-icon.svg`}
                     alt={item}
-                    style={{ 
-                      width: "24px", 
-                      height: "24px", 
-                      marginRight: "8px",
-                      filter: "brightness(0) invert(1)" // 这会将SVG变成白色
-                    }}
+                    className="w-6 h-6 mr-2 filter invert"
                   />
                   <span>{item}</span>
                 </Link>
               ))}
             </div>
-            
           </nav>
-          
+        </header>
+        
+        <main className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={
               <>
-               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                  <div>
-                    <div style={{ marginBottom: '10px' }}>
+                {/* <div className="mb-8 flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-4">
+                  <div className="w-full md:w-auto space-y-4">
+                    <div className="flex items-center space-x-2">
                       <input
                         type="number"
                         placeholder="0"
                         value={minScore}
                         onChange={(e) => setMinScore(e.target.value)}
-                        style={{ 
-                          marginRight: '10px', 
-                          padding: '8px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #ddd',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
+                        className="w-24 px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
-                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; Content Score &lt;</span>
+                      <span className="text-gray-400">&lt; Content Score &lt;</span>
                       <input
                         type="number"
                         placeholder="100"
                         value={maxScore}
                         onChange={(e) => setMaxScore(e.target.value)}
-                        style={{ 
-                          marginRight: '10px', 
-                          padding: '8px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #ddd',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
+                        className="w-24 px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
                     </div>
-                    <div>
+                    <div className="flex items-center space-x-2">
                       <input
                         type="number"
                         placeholder="0"
                         value={minInfluence}
                         onChange={(e) => setMinInfluence(e.target.value)}
-                        style={{ 
-                          marginRight: '10px', 
-                          padding: '8px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #ddd',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
+                        className="w-24 px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
-                      <span style={{ margin: '0 10px', color: '#666' }}>&lt; Influence Score &lt;</span>
+                      <span className="text-gray-400">&lt; Influence Score &lt;</span>
                       <input
                         type="number"
                         placeholder="100"
                         value={maxInfluence}
                         onChange={(e) => setMaxInfluence(e.target.value)}
-                        style={{ 
-                          marginRight: '10px', 
-                          padding: '8px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #ddd',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
+                        className="w-24 px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
                     </div>
                   </div>
-                  <button onClick={handleSearch} style={{ 
-                    padding: '20px 30px', 
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.3s',
-                    fontSize: '1.2em',
-                    fontWeight: 'bold',
-                    marginLeft: '20px',
-                    height: '100%'
-                  }}>Search</button>
-                </div>
+                  <button 
+                    onClick={handleSearch} 
+                    className="px-6 py-3 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors duration-200"
+                  >
+                    Search
+                  </button>
+                </div> */}
                 {renderTable(sortedItems, handleSort, sortField, sortDirection)}
                 {renderPagination(totalPages, currentPage, paginate)}
               </>
             } />
             <Route path="/project/:name" element={<ProjectDetail />} />
           </Routes>
-        </header>
+        </main>
       </div>
     </Router>
   );
@@ -231,50 +181,35 @@ const renderTable = (data, onSort, sortField, sortDirection) => {
   };
 
   return (
-    <table style={{ 
-      border: '3px solid #4CAF50', 
-      borderRadius: '10px', 
-      borderCollapse: 'separate', 
-      borderSpacing: '0',
-      overflow: 'hidden',
-      width: '800px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      backgroundColor: 'transparent'  // 将背景色改为透明
-    }}>
-      <thead>
-        <tr style={{ backgroundColor: '#4CAF50' }}>
-          <th onClick={() => onSort('name')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            KOL Name{renderSortIcon('name')}
-          </th>
-          <th onClick={() => onSort('followers')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            Followers{renderSortIcon('followers')}
-          </th>
-          <th onClick={() => onSort('score')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            Content Score{renderSortIcon('score')}
-          </th>
-          <th onClick={() => onSort('influence')} style={{ padding: '15px', borderBottom: '2px solid #ddd', cursor: 'pointer' }}>
-            Influence Score{renderSortIcon('influence')}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {renderLine(data)}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto bg-gray-700 rounded-md p-4">
+      <div className="p-4">
+        <span className="text-2xl font-bold">Smart followers</span> 
+      </div> 
+      
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-gray-600">
+            {['KOL Name', 'Followers', 'Content Score', 'Influence Score'].map((header, index) => (
+              <th 
+                key={index}
+                onClick={() => onSort(['name', 'followers', 'score', 'influence'][index])}
+                className="p-3 text-left cursor-pointer hover:bg-green-700 transition-colors duration-200"
+              >
+                {header}{renderSortIcon(['name', 'followers', 'score', 'influence'][index])}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {renderLine(data)}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
-/*create table kolXAccountDetail(
-  screen_name vchar40 primary key not null,
-  updatedTime timestamp,
-  totalScore integer,
-  tweetsDetail vchar500,
-  interactors vchar2000,
-  influence integer,
-  influenceAccouunts vchar2000
-);*/
 const getKolData = async (minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') => { 
-  let sqlstr = `SELECT k.screen_name AS name, k.totalScore AS score, x.followers, x.description, k.influence 
+  let sqlstr = `SELECT k.screen_name AS name,  k.totalScore AS score, x.followers, x.description, k.influence,x.name as showName,x.headImage as headImage
                 FROM kolXAccountDetail k 
                 INNER JOIN XAccounts x ON k.screen_name = x.screen_name 
                 WHERE 1=1`;
@@ -294,7 +229,7 @@ const getKolData = async (minScore = '', maxScore = '', minInfluence = '', maxIn
   
   sqlstr += ` ORDER BY k.totalScore DESC LIMIT 1000`;
 
-  let token = '5544Bdc2'; // todo 保存到.env中最好
+  //let token = '5544Bdc2'; // todo 保存到.env中最好
   console.log(sqlstr);
   let result = await sendDbRequest(sqlstr);
   console.log("get kol data");
@@ -311,13 +246,26 @@ const renderLine = (data) => {
   };
 
   return data.map((item, index) => {
-    const { name, score, followers, description, influence } = item;
+    const { name, score, followers, description, influence,headImage,showName } = item;
     return (
-      <tr key={index} onClick={() => handleClick(name)} style={{ cursor: 'pointer' }}>
-        <td style={{ padding: '10px', fontSize: '0.9em', borderBottom: '1px solid #ddd' }}>{name}</td>
-        <td style={{ padding: '10px', fontSize: '0.9em', borderBottom: '1px solid #ddd' }}>{Math.round(followers)}</td>
-        <td style={{ padding: '10px', fontSize: '0.9em', borderBottom: '1px solid #ddd' }}>{score.toFixed(2)}</td>
-        <td style={{ padding: '10px', fontSize: '0.9em', borderBottom: '1px solid #ddd' }}>{influence.toFixed(2)}</td>
+      <tr 
+        key={index} 
+        onClick={() => handleClick(name)} 
+        className="cursor-pointer hover:bg-gray-800 transition-colors duration-200 border-b border-gray-600"
+      >
+        <td className="p-3">
+        <div className="flex items-center">
+          <img src={headImage} alt="头像" className="w-10 h-10 rounded-full mr-3" />
+          <div>
+            <div className="font-bold">{showName}</div>
+            <div className="text-sm text-gray-500">@{name}</div>
+          </div>
+          </div>
+        </td>
+
+        <td className="p-3 text-center">{Math.round(followers)}</td>
+        <td className="p-3 text-center">{score.toFixed(2)}</td>
+        <td className="p-3 text-center">{influence.toFixed(2)}</td>
       </tr>
     );
   });
@@ -330,23 +278,54 @@ const renderPagination = (totalPages, currentPage, paginate) => {
   }
 
   return (
-    <nav>
-      <ul style={{ listStyle: 'none', display: 'flex', justifyContent: 'center', padding: 0, marginTop: '20px' }}>
-        {pageNumbers.map(number => (
-          <li key={number} style={{ margin: '0 5px' }}>
-            <button onClick={() => paginate(number)} style={{ 
-              padding: '8px 12px', 
-              backgroundColor: currentPage === number ? '#4CAF50' : 'white',
-              color: currentPage === number ? 'white' : '#333',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              transition: 'all 0.3s'
-            }}>
-              {number}
-            </button>
-          </li>
-        ))}
+    <nav className="mt-6">
+      <ul className="flex justify-center space-x-2">
+        {currentPage > 3 && (
+          <>
+            <li>
+              <button 
+                onClick={() => paginate(1)} 
+                className="px-3 py-2 rounded-md bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+              >
+                1
+              </button>
+            </li>
+            <li>...</li>
+          </>
+        )}
+        {[...Array(5)].map((_, index) => {
+          const pageNumber = currentPage - 2 + index;
+          if (pageNumber > 0 && pageNumber <= totalPages) {
+            return (
+              <li key={pageNumber}>
+                <button 
+                  onClick={() => paginate(pageNumber)} 
+                  className={`px-3 py-2 rounded-md ${
+                    currentPage === pageNumber 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  } transition-colors duration-200`}
+                >
+                  {pageNumber}
+                </button>
+              </li>
+            );
+          }
+          return null;
+        })}
+        {currentPage < totalPages - 2 && (
+          <>
+            <li>...</li>
+            <li>
+              <button 
+                onClick={() => paginate(totalPages)} 
+                className="px-3 py-2 rounded-md bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+              >
+                {totalPages}
+              </button>
+            </li>
+          </>
+        )}
       </ul>
     </nav>
   );
