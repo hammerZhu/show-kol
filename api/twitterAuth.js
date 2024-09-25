@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             appKey: API_KEY,
             appSecret: API_SECRET,
         });
-        const link = await client.generateAuthLink(`http://localhost:3000/loginTwitter`);
+        const link = await client.generateAuthLink(`https://show-kol.vercel.app/loginTwitter`);
         //console.log("screct="+link.oauth_token_secret);
         const encryptedSecret = encrypt(link.oauth_token_secret);
         res.setHeader('Set-Cookie', `twitterSecret=${encryptedSecret}; HttpOnly; Path=/; Max-Age=3600`);
