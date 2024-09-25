@@ -104,19 +104,20 @@ function ProjectDetail() {
               <span className="text-gray-500 text-sm">@{projectInfo.name}</span>
             </div>
           </div>
+          <div className="bg-gray-700 rounded-lg p-4 overflow-y-auto max-h-40">
+            <p className="whitespace-pre-wrap">{projectInfo.description}</p>
+          </div>
+          
+        </div>
+        <div className="w-full md:w-1/2 flex flex-col justify-between">
           <div className="bg-gray-700 rounded-lg p-2 mb-2">
             Followers: {projectInfo.followers}
           </div>
           <div className="bg-gray-700 rounded-lg p-2 mb-2">
-            Content Score: {transformScore(projectInfo.score).toFixed(2)}📈
+            Content Score: {transformScore(projectInfo.score).toFixed(2)}
           </div>
           <div className="bg-gray-700 rounded-lg p-2">
-            Influence Score: {transformScore(projectInfo.influence).toFixed(2)}📉
-          </div>
-        </div>
-        <div className="w-full md:w-1/2">
-          <div className="bg-gray-700 rounded-lg p-4 h-full overflow-auto max-h-40">
-            <p>{projectInfo.description}</p>
+            Influence Score: {transformScore(projectInfo.influence).toFixed(2)}
           </div>
         </div>
       </div>

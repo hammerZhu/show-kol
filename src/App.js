@@ -4,6 +4,9 @@ import ProjectDetail from './projectDetail';
 import { sendPostRequest, sendDbRequest, transformScore, reverseTransformScore } from './myUtils';
 import './App.css';
 import './index.css';
+import TwitterLoginButton from './TwitterLogin';
+import LoginTwitter from './loginTwitter';
+import axios from 'axios';
 function App() {
   const [data, setData] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(() => {
@@ -26,6 +29,7 @@ function App() {
 
   const [sortField, setSortField] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('asc');
+  const [user, setUser] = React.useState(null);
 
   React.useEffect(() => {
     fetchData(minScore, maxScore, minInfluence, maxInfluence);
@@ -38,6 +42,28 @@ function App() {
     localStorage.setItem('minInfluence', minInfluence);
     localStorage.setItem('maxInfluence', maxInfluence);
   }, [currentPage, minScore, maxScore, minInfluence, maxInfluence]);
+
+  React.useEffect(() => {
+    async function verifyAuth() {
+      try {
+        let twitterData = localStorage.getItem('twitterData');
+        if(twitterData){
+           console.log("twitterData=");
+           console.log(twitterData);
+           const response = await axios.post('/api/verifyTwitterAuth',{twitterData});
+            if(response.status === 200){
+              console.log("login user=");
+              console.log(response.data);
+              setUser(response.data);
+            }
+        }
+      } catch (error) {
+        console.error('验证失败:', error);
+      }
+    }
+
+    verifyAuth();
+  }, []);
 
   async function fetchData(minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') {
     const minScoreTransformed = minScore !== '' ? reverseTransformScore(parseFloat(minScore)) : '';
@@ -86,12 +112,29 @@ function App() {
     });
   }, [currentItems, sortField, sortDirection]);
 
+  const handleTwitterLoginSuccess = (response) => {
+    console.log(response);
+    // 处理登录成功逻辑
+    window.location.href = response;
+  };
+  const handleTwitterLogout = () => {
+    //从localstorage中删除twitterData
+    localStorage.removeItem('twitterData');
+    setUser(null);
+  };
+  const handleTwitterLoginFailure = (error) => {
+    console.error(error);
+    // 处理登录失败逻辑
+  };
+  const handleTwitterLoginResult = (userName) => {
+    setUser(userName);
+  };
   return (
     <Router>
       <div className="min-h-screen bg-gray-900 text-white">
         <header className="bg-gray-800 shadow-lg">
           <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 cursor-pointer" onClick={() => window.location.href = '/'}>
               <img src="/logo.png" alt="Logo" className="h-10 rounded-full" />
               <span className="text-2xl font-bold">DISCOVER</span>
             </div>
@@ -111,6 +154,12 @@ function App() {
                 </Link>
               ))}
             </div>
+            <TwitterLoginButton
+              onSuccess={handleTwitterLoginSuccess}
+              onFailure={handleTwitterLoginFailure}
+              onLogout={handleTwitterLogout}
+              user={user}
+            />
           </nav>
         </header>
         
@@ -167,6 +216,7 @@ function App() {
               </>
             } />
             <Route path="/project/:name" element={<ProjectDetail />} />
+            <Route path="/loginTwitter" element={<LoginTwitter onLoginSuccess={handleTwitterLoginResult} />} />
           </Routes>
         </main>
       </div>
@@ -193,7 +243,7 @@ const renderTable = (data, onSort, sortField, sortDirection) => {
               <th 
                 key={index}
                 onClick={() => onSort(['name', 'followers', 'score', 'influence'][index])}
-                className="p-3 text-left cursor-pointer hover:bg-green-700 transition-colors duration-200"
+                className="p-3 text-left cursor-pointer transition-colors duration-200"
               >
                 {header}{renderSortIcon(['name', 'followers', 'score', 'influence'][index])}
               </th>

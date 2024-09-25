@@ -55,12 +55,17 @@ export function formatDate(date) {
     }
   }
 
+  // 将分数转换为0-100的百分比，最大99.8
   export function transformScore(score){
     const maxScore = 1000000;
     const adjustedScore = Math.min(score, maxScore);
     const logScore = Math.log(adjustedScore + 1);
     const maxLogScore = Math.log(maxScore + 1);
-    return (logScore / maxLogScore) * 100;
+    let retr=(logScore / maxLogScore) * 100;
+    if(retr>=100){
+      retr=99.8;
+    }
+    return retr;
   };
 
   export function reverseTransformScore(normalizedScore){
@@ -69,3 +74,5 @@ export function formatDate(date) {
     const logScore = (normalizedScore / 100) * maxLogScore;
     return Math.exp(logScore) - 1;
   };
+
+ 
