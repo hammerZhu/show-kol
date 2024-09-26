@@ -5,8 +5,8 @@ import { encrypt, decrypt } from '../serverLib/serverLib';
 
 let savedOauthToken="";
 let savedSecret="";
-const API_KEY=process.env.X_API_KEY;
-const API_SECRET=process.env.X_API_SECRET;  
+const API_KEY=process.env.REACT_APP_X_API_KEY;
+const API_SECRET=process.env.REACT_APP_X_API_SECRET;  
 export default async function handler(req, res) {
     if(req.method==='GET'){
         // 获取请求令牌
