@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 // 使用环境变量存储密钥，不要直接在代码中硬编码
-const SECRET_KEY = process.env.REACT_APP_SECRET_KEY || 'your-secret-key-must-be-32-chars-long';
+const SECRET_KEY = process.env.APP_SECRET_KEY || 'your-secret-key-must-be-32-chars-long';
 const ALGORITHM = 'aes-256-cbc';
 
 // 确保密钥长度为32字节
