@@ -1,5 +1,6 @@
 import React from 'react';
-import axios from 'axios';
+// 删除 axios 导入
+// import axios from 'axios';
 import './index.css';
 
 const TwitterLoginButton = ({ onSuccess, onFailure, onLogout, user }) => {
@@ -17,9 +18,16 @@ const TwitterLoginButton = ({ onSuccess, onFailure, onLogout, user }) => {
     } else {
       // 用户未登录，执行登录操作
       try {
-        const response = await axios.get('/api/twitterAuth', null);
-        console.log(response.data);
-        onSuccess(response.data);
+        console.log("try to login");
+        const response = await fetch('/api/twitterAuth', {
+          method: 'GET',
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log(data);
+        onSuccess(data);
       } catch (error) {
         console.error('login failed:', error);
         onFailure(error);

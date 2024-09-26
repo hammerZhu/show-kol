@@ -2,18 +2,24 @@
 该页面从params中获取oauth_token和oauth_verifier，然后进行登录，登录成功后，跳转到首页   
 */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+// 删除 axios 导入
+// import axios from 'axios';
 
 function LoginTwitter({ onLoginSuccess }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const requestSentRef = useRef(false);
 
   useEffect(() => {
     const loginWithTwitter = async () => {
+      if (requestSentRef.current) {
+        return; // 如果请求已经发送，直接返回
+      }
+
       const searchParams = new URLSearchParams(location.search);
       const oauthToken = searchParams.get('oauth_token');
       const oauthVerifier = searchParams.get('oauth_verifier');
@@ -25,18 +31,30 @@ function LoginTwitter({ onLoginSuccess }) {
       }
 
       try {
-        // 发送请求到后端进行 Twitter 登录验证
-        const response = await axios.post('/api/twitterAuth', {
-          oauthToken,
-          oauthVerifier
+        requestSentRef.current = true; // 标记请求已发送
+
+        const response = await fetch('/api/twitterAuth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            oauthToken,
+            oauthVerifier
+          }),
         });
 
-        // 假设后端返回用户信息和登录令牌
+        if (!response.ok) {
+          throw new Error('登录请求失败');
+        }
+
+        const data = await response.json();
+
         console.log(`login twitter result=`);
-        console.log(response.data);
+        console.log(data);
         // 登录成功，把内容保存到localstorage中
-        localStorage.setItem('twitterData', response.data.twitterData);
-        onLoginSuccess(response.data.userName);
+        localStorage.setItem('twitterData', data.twitterData);
+        onLoginSuccess(data.userName);
         navigate('/');
       } catch (err) {
         setError('登录失败：' + err.message);
@@ -46,7 +64,7 @@ function LoginTwitter({ onLoginSuccess }) {
     };
 
     loginWithTwitter();
-  }, [location, navigate]);
+  }, [location, navigate, onLoginSuccess]);
 
   if (loading) {
     return <div>正在登录中，请稍候...</div>;

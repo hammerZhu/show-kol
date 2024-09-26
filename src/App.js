@@ -6,7 +6,6 @@ import './App.css';
 import './index.css';
 import TwitterLoginButton from './TwitterLogin';
 import LoginTwitter from './loginTwitter';
-import axios from 'axios';
 function App() {
   const [data, setData] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(() => {
@@ -50,11 +49,18 @@ function App() {
         if(twitterData){
            console.log("twitterData=");
            console.log(twitterData);
-           const response = await axios.post('/api/verifyTwitterAuth',{twitterData});
-            if(response.status === 200){
+           const response = await fetch('/api/verifyTwitterAuth', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+             },
+             body: JSON.stringify({twitterData}),
+           });
+            if(response.ok){
+              const data = await response.json();
               console.log("login user=");
-              console.log(response.data);
-              setUser(response.data);
+              console.log(data);
+              setUser(data);
             }
         }
       } catch (error) {

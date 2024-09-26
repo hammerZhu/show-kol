@@ -1,4 +1,4 @@
-import axios from 'axios';
+//import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 //import { encrypt, decrypt } from '../src/myUtils'; // 假设您有加密和解密函数
 import { encrypt, decrypt } from '../serverLib/serverLib';
@@ -17,6 +17,7 @@ export default async function handler(req, res) {
             appSecret: API_SECRET,
         });
         const link = await client.generateAuthLink(`https://show-kol.vercel.app/loginTwitter`);
+       //const link = await client.generateAuthLink(`http://localhost:3000/loginTwitter`);
         //console.log("screct="+link.oauth_token_secret);
         const encryptedSecret = encrypt(link.oauth_token_secret);
         res.setHeader('Set-Cookie', `twitterSecret=${encryptedSecret}; HttpOnly; Path=/; Max-Age=3600`);
@@ -62,6 +63,7 @@ export default async function handler(req, res) {
             accessToken:result.accessToken,
             accessSecret:result.accessSecret
         }
+        console.log("login success");
         const encryptedData = encrypt(JSON.stringify(savedCookie));
         //res.setHeader('Set-Cookie', `twitterData=${encryptedData}; HttpOnly; Path=/; Max-Age=2592000`);
         res.status(200).json({userName:result.screenName,twitterData:encryptedData});
