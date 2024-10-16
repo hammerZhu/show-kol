@@ -11,8 +11,7 @@ create table kolComments(
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { formatDate } from './myUtils';
-import { sendPostRequest,sendDbRequest,transformScore } from './myUtils';
+import { formatDate, sendPostRequest, sendDbRequest, transformScore } from './myUtils';
 
 function ProjectDetail() {
   const { name } = useParams();
@@ -22,41 +21,63 @@ function ProjectDetail() {
     followers: 0,
     description: '',
     influence: 0,
-    influenceAccouunts:[],
-    headImage:''
+    influenceAccouunts: [],
+    headImage: ''
   });
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [tags, setTags] = useState([]);
 
   const getProjectInfo = async (projectName) => {
-    let sqlstr=`select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description,x.headImage,x.name from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
-    let result=await sendDbRequest(sqlstr);
-    if(result && result.success){
-      let influenceAccouunts=[];
-      if(result.data[0].influenceAccouunts.length>0){
-        influenceAccouunts=JSON.parse(result.data[0].influenceAccouunts);
+    let sqlstr = `select k.screen_name,k.totalScore,k.updatedTime,k.influence,k.influenceAccouunts,x.followers,x.description,x.headImage,x.name from kolXAccountDetail k inner join XAccounts x on k.screen_name=x.screen_name where k.screen_name='${projectName}'`;
+    let result = await sendDbRequest(sqlstr);
+    if (result && result.success) {
+      let influenceAccouunts = [];
+      if (result.data[0].influenceAccouunts.length > 0) {
+        influenceAccouunts = JSON.parse(result.data[0].influenceAccouunts);
       }
-      if(influenceAccouunts==undefined){
+      if (influenceAccouunts == undefined) {
         console.log("influenceAccouunts is undefined");
       }
       console.log("influenceAccouunts:");
       console.log(influenceAccouunts);
-      let data={
-        name:result.data[0].screen_name,
-        showName:result.data[0].name,
-        score:result.data[0].totalScore,
-        followers:result.data[0].followers,
-        description:result.data[0].description,
-        influence:result.data[0].influence,
-        influenceAccouunts:influenceAccouunts,
-        headImage:result.data[0].headImage
+      let data = {
+        name: result.data[0].screen_name,
+        showName: result.data[0].name,
+        score: result.data[0].totalScore,
+        followers: result.data[0].followers,
+        description: result.data[0].description,
+        influence: result.data[0].influence,
+        influenceAccouunts: influenceAccouunts,
+        headImage: result.data[0].headImage
       }
       setProjectInfo(data);
     }
-    
   };
 
-   const getComments = async (projectName) => {
+  // getTags 函数框架
+  const getTags = async (projectName) => {
+    // 在这里实现获取标签的逻辑
+    let tagList=[];
+    let sqlstr=`select tagId,tagName from kolTags`;
+    let result=await sendDbRequest(sqlstr);
+    if(result && result.success){
+      let tagMap=new Map();
+      for(let tag of result.data){
+        tagMap.set(tag.tagId,tag.tagName);
+      }
+      let sqlstr2=`select tagId from XAccountTags where account='${projectName}';`;
+      let result2=await sendDbRequest(sqlstr2);
+      if(result2 && result2.success){
+        for(let tag of result2.data){ 
+          tagList.push(tagMap.get(tag.tagId));
+        }
+      }
+    }
+    return tagList;
+  };
+
+  const getComments = async (projectName) => {
     let sqlstr = `SELECT name,comment,updatedTime,author,stars FROM kolComments WHERE name='${projectName}'`;
     let result = await sendDbRequest(sqlstr);
     console.log(`comments:`);
@@ -70,8 +91,8 @@ function ProjectDetail() {
   const handleCommentSubmit = async () => {
     if (newComment.trim() === '') return;
 
-    let data={comment:newComment,name:name,stars:5};
-    const result = await sendPostRequest('post_kol_comment',JSON.stringify(data));
+    let data = { comment: newComment, name: name, stars: 5 };
+    const result = await sendPostRequest('post_kol_comment', JSON.stringify(data));
     if (result && result.success) {
       getComments(name);
       setNewComment('');
@@ -83,12 +104,13 @@ function ProjectDetail() {
   useEffect(() => {
     getProjectInfo(name);
     getComments(name);
+    getTags(name).then(setTags);
   }, [name]);
 
   const currentDate = new Date();
   const formattedDate = formatDate(currentDate);
-  let leftInfluenceAccounts=projectInfo.influenceAccouunts.slice(0, Math.ceil(projectInfo.influenceAccouunts.length / 2));
-  let rightInfluenceAccounts=projectInfo.influenceAccouunts.slice(Math.ceil(projectInfo.influenceAccouunts.length / 2));
+  let leftInfluenceAccounts = projectInfo.influenceAccouunts.slice(0, Math.ceil(projectInfo.influenceAccouunts.length / 2));
+  let rightInfluenceAccounts = projectInfo.influenceAccouunts.slice(Math.ceil(projectInfo.influenceAccouunts.length / 2));
   return (
     <div className="max-w-4xl mx-auto p-4 font-sans text-white bg-gray-900">
       <div className="bg-gray-800 rounded-lg p-6 mb-6 flex flex-wrap">
@@ -111,13 +133,23 @@ function ProjectDetail() {
         </div>
         <div className="w-full md:w-1/2 flex flex-col justify-between">
           <div className="bg-gray-700 rounded-lg p-2 mb-2">
-            Followers: {projectInfo.followers}
+            粉丝数: {projectInfo.followers}
           </div>
           <div className="bg-gray-700 rounded-lg p-2 mb-2">
-            Content Score: {transformScore(projectInfo.score).toFixed(2)}
+            内容得分: {transformScore(projectInfo.score).toFixed(2)}
+          </div>
+          <div className="bg-gray-700 rounded-lg p-2 mb-2">
+            影响力得分: {transformScore(projectInfo.influence).toFixed(2)}
           </div>
           <div className="bg-gray-700 rounded-lg p-2">
-            Influence Score: {transformScore(projectInfo.influence).toFixed(2)}
+            标签: 
+            <div className="flex flex-wrap gap-2 mt-2">
+              {tags.map((tag, index) => (
+                <span key={index} className="bg-purple-600 text-white px-2 py-1 rounded-full text-sm">
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
