@@ -7,6 +7,7 @@ import './index.css';
 import TwitterLoginButton from './TwitterLogin';
 import LoginTwitter from './loginTwitter';
 function App() {
+  const [allData, setAllData] = React.useState([]);
   const [data, setData] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(() => {
     return parseInt(localStorage.getItem('currentPage')) || 1;
@@ -110,49 +111,24 @@ function App() {
     setActiveTags(newActiveTags);
     localStorage.setItem('activeTags', JSON.stringify(newActiveTags));
 
-    // 更新与标签相关的账户集合
-    let tagIndexs = [];
-    for(let i=0;i<newActiveTags.length;i++){
-      tagIndexs.push(tags.indexOf(newActiveTags[i])+1);
-    }
+    let tagIndexs = newActiveTags.map(t => tags.indexOf(t) + 1);
     const accounts = await getTags(tagIndexs);
-    
-    setTaggedAccounts(prevAccounts => {
-      const newAccounts = new Set(accounts);
-      return newAccounts;
-    });
+    setTaggedAccounts(new Set(accounts));
+
+    filterData(new Set(accounts));
+    setCurrentPage(1);
   };
 
-  const filterDataByTags = async (data) => {
-    if (activeTags.length === 0) return data;
-    let indexs = [];
-    for (let i=0;i<activeTags.length;i++){
-      indexs.push(tags.indexOf(activeTags[i])+1);
+  const filterData = (taggedAccounts) => {
+    if (taggedAccounts.size === 0) {
+      setData(allData);
+    } else {
+      const filteredData = allData.filter(item => taggedAccounts.has(item.name));
+      setData(filteredData);
     }
-    //组合查询语句查询数据。
-    let sqlstr=`select a.account from XAccountsTags a where a.tagId=${indexs[0]}`;
-    /*for(let i=1;i<indexs.length;i++){
-      sqlstr+=` JOIN XAccountsTags rt ON a.account = rt.account AND rt.tagId = ${indexs[i]}`;
-    }*///todo暂时用1个tag
-    sqlstr+=` GROUP BY a.account`;
-    console.log(`sqlstr=${sqlstr}`);
-    /*let result = await sendDbRequest(sqlstr);
-    
-    if(result && result.success){
-      let accounts = result.data;
-      let existed = [];
-      for(let i=0;i<accounts.length;i++){
-        existed.push(accounts[i].account);
-      }
-      console.log(`existed=${existed.length}`);
-     // data=data.filter(item=>{
-     //   return existed.includes(item.screen_name);
-     // });
-    }*/
-    return data;
   };
 
-  async function fetchData(minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') {
+  const fetchData = async (minScore = '', maxScore = '', minInfluence = '', maxInfluence = '') => {
     const minScoreTransformed = minScore !== '' ? reverseTransformScore(parseFloat(minScore)) : '';
     const maxScoreTransformed = maxScore !== '' ? reverseTransformScore(parseFloat(maxScore)) : '';
     const minInfluenceTransformed = minInfluence !== '' ? reverseTransformScore(parseFloat(minInfluence)) : '';
@@ -164,9 +140,16 @@ function App() {
         score: transformScore(item.score),
         influence: transformScore(item.influence)
       }));
+      setAllData(transformedData);
       setData(transformedData);
     }
-  }
+  };
+
+  React.useEffect(() => {
+    if (allData.length > 0) {
+      filterData(taggedAccounts);
+    }
+  }, [allData, taggedAccounts]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -262,7 +245,11 @@ function App() {
               <span className="text-2xl font-bold">DISCOVER</span>
             </div>
             <button
-            onClick={handleDefaultSearch}
+            onClick={() => {
+              if (window.location.pathname === '/') {
+                handleDefaultSearch();
+              }
+            }}
             className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
           >
             <img
@@ -270,11 +257,15 @@ function App() {
                   alt="重新搜索"
                   className="w-6 h-6 mr-2 filter invert"
             />
-            <span>项目</span>
+            <span>All kols</span>
           </button>
             <div className="flex space-x-6">
               <button
-                onClick={openSearchModal}
+              onClick={() => {
+                if (window.location.pathname === '/') {
+                  openSearchModal();
+                }
+              }}
                 className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
               >
                 <img
