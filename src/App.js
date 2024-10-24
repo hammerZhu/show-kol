@@ -6,6 +6,8 @@ import './App.css';
 import './index.css';
 import TwitterLoginButton from './TwitterLogin';
 import LoginTwitter from './loginTwitter';
+import MetamaskButton from './components/MetamaskButton';
+
 function App() {
   const [allData, setAllData] = React.useState([]);
   const [data, setData] = React.useState([]);
@@ -276,12 +278,15 @@ function App() {
                 <span>Search</span>
               </button>
             </div>
-            <TwitterLoginButton
-              onSuccess={handleTwitterLoginSuccess}
-              onFailure={handleTwitterLoginFailure}
-              onLogout={handleTwitterLogout}
-              user={user}
-            />
+            <div className="flex space-x-4">
+              <TwitterLoginButton
+                onSuccess={handleTwitterLoginSuccess}
+                onFailure={handleTwitterLoginFailure}
+                onLogout={handleTwitterLogout}
+                user={user}
+              />
+              <MetamaskButton />
+            </div>
           </nav>
         </header>
         
