@@ -6,7 +6,7 @@ import './App.css';
 import './index.css';
 import TwitterLoginButton from './TwitterLogin';
 import LoginTwitter from './loginTwitter';
-import MetamaskButton from './components/MetamaskButton';
+import WalletConnectButton from './components/WalletConnectButton';
 
 function App() {
   const [allData, setAllData] = React.useState([]);
@@ -285,7 +285,7 @@ function App() {
                 onLogout={handleTwitterLogout}
                 user={user}
               />
-              <MetamaskButton />
+              <WalletConnectButton />
             </div>
           </nav>
         </header>
