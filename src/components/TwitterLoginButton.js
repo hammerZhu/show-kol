@@ -1,9 +1,9 @@
 import React from 'react';
 // 删除 axios 导入
 // import axios from 'axios';
-import './index.css';
+import '../index.css';
 
-const TwitterLoginButton1 = ({ onSuccess, onFailure, onLogout, user }) => {
+const TwitterLoginButton = ({ onSuccess, onFailure, onLogout, user }) => {
   const handleClick = async () => {
     if (user) {
       // 用户已登录，询问是否退出
@@ -43,4 +43,4 @@ const TwitterLoginButton1 = ({ onSuccess, onFailure, onLogout, user }) => {
   );
 };
 
-export default TwitterLoginButton1;
+export default TwitterLoginButton;

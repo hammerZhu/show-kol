@@ -4,11 +4,14 @@ import ProjectDetail from './projectDetail';
 import { sendPostRequest, sendDbRequest, transformScore, reverseTransformScore } from './myUtils';
 import './App.css';
 import './index.css';
-import TwitterLoginButton from './TwitterLogin';
+import TwitterLoginButton from './components/TwitterLoginButton';
 import LoginTwitter from './loginTwitter';
 import WalletConnectButton from './components/WalletConnectButton';
+import TokenBalance from './components/TokenBalance';
+import { useUser } from './contexts/UserContext';
 
 function App() {
+  const { user, setUser } = useUser();
   const [allData, setAllData] = React.useState([]);
   const [data, setData] = React.useState([]);
   const [currentPage, setCurrentPage] = React.useState(() => {
@@ -31,7 +34,6 @@ function App() {
 
   const [sortField, setSortField] = React.useState(null);
   const [sortDirection, setSortDirection] = React.useState('asc');
-  const [user, setUser] = React.useState(null);
   const [tags, setTags] = React.useState([]);
   const [activeTags, setActiveTags] = React.useState(() => {
     const savedActiveTags = localStorage.getItem('activeTags');
@@ -53,35 +55,6 @@ function App() {
     localStorage.setItem('minInfluence', minInfluence);
     localStorage.setItem('maxInfluence', maxInfluence);
   }, [currentPage, minScore, maxScore, minInfluence, maxInfluence]);
-
-  React.useEffect(() => {
-    async function verifyAuth() {
-      try {
-        let twitterData = localStorage.getItem('twitterData');
-        if(twitterData){
-           console.log("twitterData=");
-           console.log(twitterData);
-           const response = await fetch('/api/verifyTwitterAuth', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json',
-             },
-             body: JSON.stringify({twitterData}),
-           });
-            if(response.ok){
-              const data = await response.json();
-              console.log("login user=");
-              console.log(data);
-              setUser(data);
-            }
-        }
-      } catch (error) {
-        console.error('验证失败:', error);
-      }
-    }
-
-    verifyAuth();
-  }, []);
 
   React.useEffect(() => {
     fetchTags();
@@ -279,13 +252,14 @@ function App() {
               </button>
             </div>
             <div className="flex space-x-4">
+              <TokenBalance />
               <TwitterLoginButton
                 onSuccess={handleTwitterLoginSuccess}
                 onFailure={handleTwitterLoginFailure}
                 onLogout={handleTwitterLogout}
                 user={user}
               />
-              <WalletConnectButton />
+              {user && <WalletConnectButton />}
             </div>
           </nav>
         </header>
