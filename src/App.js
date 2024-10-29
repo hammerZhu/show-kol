@@ -9,6 +9,8 @@ import LoginTwitter from './loginTwitter';
 import WalletConnectButton from './components/WalletConnectButton';
 import TokenBalance from './components/TokenBalance';
 import { useUser } from './contexts/UserContext';
+import UserTweet from './UserTweet';
+import PostScore from './components/PostScore';
 
 function App() {
   const { user, setUser } = useUser();
@@ -219,28 +221,41 @@ function App() {
               <img src="/logo.png" alt="Logo" className="h-10 rounded-full" />
               <span className="text-2xl font-bold">DISCOVER</span>
             </div>
-            <button
-            onClick={() => {
-              if (window.location.pathname === '/') {
-                handleDefaultSearch();
-              }
-            }}
-            className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
-          >
-            <img
+            <div className="flex space-x-6">
+              <button
+                onClick={() => {
+                  if (window.location.pathname === '/') {
+                    handleDefaultSearch();
+                  }
+                }}
+                className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
+              >
+                <img
                   src="/projects-icon.svg"
                   alt="重新搜索"
                   className="w-6 h-6 mr-2 filter invert"
-            />
-            <span>All kols</span>
-          </button>
-            <div className="flex space-x-6">
+                />
+                <span>All kols</span>
+              </button>
+              {user && (
+                <button
+                  onClick={() => window.location.href = '/user-tweet'}
+                  className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  <img
+                    src="/profile-icon.svg"
+                    alt="发推"
+                    className="w-6 h-6 mr-2 filter invert"
+                  />
+                  <span>Profile</span>
+                </button>
+              )}
               <button
-              onClick={() => {
-                if (window.location.pathname === '/') {
-                  openSearchModal();
-                }
-              }}
+                onClick={() => {
+                  if (window.location.pathname === '/') {
+                    openSearchModal();
+                  }
+                }}
                 className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
               >
                 <img
@@ -253,6 +268,7 @@ function App() {
             </div>
             <div className="flex space-x-4">
               <TokenBalance />
+              <PostScore />
               <TwitterLoginButton
                 onSuccess={handleTwitterLoginSuccess}
                 onFailure={handleTwitterLoginFailure}
@@ -292,6 +308,7 @@ function App() {
             } />
             <Route path="/project/:name" element={<ProjectDetail />} />
             <Route path="/loginTwitter" element={<LoginTwitter onLoginSuccess={handleTwitterLoginResult} />} />
+            <Route path="/user-tweet" element={<UserTweet />} />
           </Routes>
         </main>
 
