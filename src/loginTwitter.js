@@ -56,9 +56,12 @@ function LoginTwitter({ onLoginSuccess }) {
         console.log(data);
         // 登录成功，把内容保存到localstorage中
         localStorage.setItem('twitterData', data.twitterData);
-        onLoginSuccess(data.userName);
+        if(onLoginSuccess){
+          onLoginSuccess(data.userName);
+        }
         setUser(data.userName);
         navigate('/');
+        console.log('loginTwitter success',data.userName);
       } catch (err) {
         setError('登录失败：' + err.message);
       } finally {

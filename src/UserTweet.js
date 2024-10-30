@@ -37,6 +37,7 @@ function UserTweet() {
       const response = await sendDbRequest(sqlstr);
       if (response && response.success) {
         setAvailableTweets(response.data);
+        //console.log('availableTweets=',response.data);
       }
     } catch (error) {
       console.error('获取可发送推文失败:', error);
@@ -110,7 +111,7 @@ function UserTweet() {
             {/* 卡片底部 - 发送按钮 */}
             <div className="px-4 py-3 bg-gray-700">
               <button
-                onClick={() => handleSendTweet(tweet.title)}
+                onClick={() => handleSendTweet(tweet.content)}
                 className="w-full bg-purple-600 text-white rounded-lg py-2 px-4 hover:bg-purple-700 transition-colors duration-200"
               >
                 发送推文
