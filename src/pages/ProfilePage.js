@@ -54,7 +54,10 @@ function ProfilePage() {
       setTimeout(() => setCopyStatus(''), 3000);
     });
   };
-
+  let totalScore = 0;
+ for(let i=0;i<userScore.lastCoinScores.length;i++){
+  totalScore += userScore.lastCoinScores[i];
+ }
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -101,7 +104,7 @@ function ProfilePage() {
                 <img src="/images/token.png" alt="Coin Score" className="h-8 w-8 filter invert" />
               </div>
               <div className="text-3xl font-bold text-purple-500">
-                {userScore?.lastCoinScore || 0}
+                {totalScore}
               </div>
               <p className="text-gray-400 mt-2">
                 最后区块: {userScore?.lastBlockNumber || '暂无'}

@@ -14,24 +14,29 @@ const ERC20_ABI = [
 ];
 //根据实际需要来配置。注意最后区块需要加大，服务器只能保持一小段时间的区块数据，必要的时候，需要用一个后台程序来刷新旧的区块。
 const START_BLOCK=21657962;
-const ProviderUrl='https://developer-access-mainnet.base.org';
-const TokenAddress='0xc8862e713776eca8e6958c48d2bdce16b8b8035a';//1984 token 
-
+const ProviderUrl='https://mainnet.base.org';
+// 修改 TokenAddress 为数组
+const TokenAddresses = [
+ '0x574178357661527601482b79af6bb1ff7cc1306a', // 1984 token
+  '0x4278a8944cf63753b13e9f726bbc1192412988d8'// 在这里添加其他代币地址
+];
+//0x4e9299467f723E190bd2B7e6339624382A786a3E 测试账号，21701002 测试首区块。
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
-  const [user, setUser] = useState('logan99962');
+  const [user, setUser] = useState('');//todo 发行版改成空串。
   const [wallets, setWallets] = useState([]);
-  const [tokenBalance, setTokenBalance] = useState(null);
-  const [tokenSymbol, setTokenSymbol] = useState('');
-  const [holdingScore, setHoldingScore] = useState(0); // 当前用户持有币的积分。
+  const [tokenBalances, setTokenBalances] = useState({});
+  const [tokenSymbols, setTokenSymbols] = useState({});
+  const [holdingScores, setHoldingScores] = useState({});
   const [userScore, setUserScore] = useState({
     name: '',
-    lastCoinScore: 0,
     lastBlockNumber: START_BLOCK,
     lastTweetScore: 0,
     lastTweetId: '',
-    referrial: ''
-  });//当前用户基准积分。
+    referrial: '',
+    lastCoinScores: [],
+    lastCoinBalances: [],
+  });
   const [isInitializing, setIsInitializing] = useState(false);
   const [inviteCodes, setInviteCodes] = useState([]);
   const [invitedUsers, setInvitedUsers] = useState([]);
@@ -94,27 +99,55 @@ export function UserProvider({ children }) {
       
       if (response && response.data && response.data.length > 0) {
         const scoreData = response.data[0];
+        
+        // 构建代币积分和余额数组
+        const scores = [];
+        const balances = [];
+        
+        // 处理现有的代币数据
+        scores[0] = scoreData.lastCoinScore || 0;
+        scores[1] = scoreData.lastCoinScore2 || 0;
+        balances[0] = scoreData.lastCoinBalance || 0.0;
+        balances[1] = scoreData.lastCoinBalance2 || 0.0;
+        
         setUserScore({
           name: scoreData.name,
-          lastCoinScore: scoreData.last_coin_score || 0,
-          lastBlockNumber: scoreData.last_block_number || START_BLOCK,
-          lastTweetScore: scoreData.last_tweet_score || 0,
-          lastTweetId: scoreData.last_tweet_id || '',
-          referrial: scoreData.referrial || ''
+          lastBlockNumber: scoreData.lastBlockNumber || START_BLOCK,
+          lastTweetScore: scoreData.lastTweetScore || 0,
+          lastTweetId: scoreData.lastTweetId || '',
+          referrial: scoreData.referrial || '',
+          lastCoinScores: scores,
+          lastCoinBalances: balances
         });
       } else {
-        // 如果没有记录，创建新记录
+        // 如果没有记录，创建新记录，新纪录没有钱包，所以blocknumber是0.
         let referrialValue = localStorage.getItem('referral');
-        let referrial = referrialValue?referrialValue:'';
-        setUserScore({
+        let referrial = referrialValue ? referrialValue : '';
+        
+        // 初始化空数组，长度与代币数量相同
+        const initialScores = new Array(TokenAddresses.length).fill(0);
+        const initialBalances = new Array(TokenAddresses.length).fill(0.0);
+        
+        const newUserScore = {
           name: username,
-          lastCoinScore: 0,
           lastBlockNumber: START_BLOCK,
           lastTweetScore: 0,
           lastTweetId: '',
-          referrial: referrial
-        });
-        let sqlstr = `INSERT INTO ShowKolScore (name, lastCoinScore, lastBlockNumber, lastTweetScore, lastTweetId,referrial) VALUES ('${username}', 0, 0, 0, '', '${referrial}')`;
+          referrial: referrial,
+          lastCoinScores: initialScores,
+          lastCoinBalances: initialBalances
+        };
+        setUserScore(newUserScore);
+        
+        // 构建 SQL 插入语句
+        let sqlstr = `
+          INSERT INTO ShowKolScore (
+            name, lastBlockNumber, lastTweetScore, lastTweetId, referrial, 
+            lastCoinScore, lastCoinBalance, lastCoinScore2, lastCoinBalance2
+          ) VALUES (
+            '${username}', ${START_BLOCK}, 0, '', '${referrial}',
+            0, 0.0, 0, 0.0
+          )`;
         await sendDbRequest(sqlstr);
       }
     } catch (error) {
@@ -216,107 +249,168 @@ export function UserProvider({ children }) {
       }
     }
   }
+  
   async function fetchWalletsAndBalance(wallets) {
     if (user) {
       try {
-       // 连接到 BSC 网络
         const provider = new ethers.JsonRpcProvider(ProviderUrl);
+        const balances = {};
+        const symbols = {};
         
-        // ERC20 代币合约地址
-        
-        const tokenContract = new ethers.Contract(TokenAddress, ERC20_ABI, provider);
-        
-        let totalBalance = ethers.getBigInt(0);
-        for (const wallet of wallets) {
-          const balance = await tokenContract.balanceOf(wallet);
-          totalBalance += balance;
+        for (const tokenAddress of TokenAddresses) {
+          const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+          let totalBalance = ethers.getBigInt(0);
+          
+          for (const wallet of wallets) {
+            const balance = await tokenContract.balanceOf(wallet);
+            totalBalance += balance;
+          }
+          
+          const decimals = await tokenContract.decimals();
+          const symbol = await tokenContract.symbol();
+          
+          symbols[tokenAddress] = symbol;
+          balances[tokenAddress] = ethers.formatUnits(totalBalance, decimals);
         }
         
-        // 获取代币小数位数
-        const decimals = await tokenContract.decimals();
-        
-        // 获取代币符号
-        const symbol = await tokenContract.symbol();
-        setTokenSymbol(symbol);
-        
-        // 将余额转换为可读格式
-        const formattedBalance = ethers.formatUnits(totalBalance, decimals);
-        console.log(`${symbol} 余额:`, formattedBalance);
-        setTokenBalance(formattedBalance);
+        setTokenSymbols(symbols);
+        setTokenBalances(balances);
       } catch (error) {
         console.error('获取钱包和余额时出错:', error);
       }
     }
   }
 
-  async function calculateHoldingScore(wallets,lastBlockNumber) {
-    console.log(`calculateHoldingScore for wallets=${wallets} from block=${lastBlockNumber}`);
-    
+  //查询币的交易记录，同步到最新积分上。
+  async function calculateHoldingScore(wallets, lastBlockNumber) {
     if (!wallets.length) return;
-    
+    //和上次的区块少于1000个，则不计算。
+    if(lastBlockNumber>0 && (await getLatestBlockNumber())-lastBlockNumber<1000){
+      return;
+    }
     try {
+      // 1. 读取最新区块号
       const provider = new ethers.JsonRpcProvider(ProviderUrl);
-      let totalScore = 0;
       const currentBlock = await provider.getBlockNumber();
+      const BLOCK_BATCH_SIZE = 10000;
+      
+      // 2. 读取上次钱包的余额
+      const initialBalances = userScore.lastCoinBalances;
+      const initialScores = userScore.lastCoinScores;
+      const newBalances = [];
+      const newScores = [];
 
-      for (const wallet of wallets) {
-        console.log('get transfer logs for wallet=',wallet);
-        // 获取所有转入和转出交易
-        const transfersIn = await provider.getLogs({
-          address: TokenAddress,
-          topics: [
-            ethers.id("Transfer(address,address,uint256)"),
-            null,
-            ethers.zeroPadValue(wallet.toLowerCase(), 32)
-          ],
-          fromBlock:lastBlockNumber,
-          toBlock: 'latest'
-        });
-       // console.log('transfersIn=',transfersIn);
-        const transfersOut = await provider.getLogs({
-          address: TokenAddress,
-          topics: [
-            ethers.id("Transfer(address,address,uint256)"),
-            ethers.zeroPadValue(wallet.toLowerCase(), 32),
-            null
-          ],
-          fromBlock: lastBlockNumber,
-          toBlock: 'latest'
-        });
-       // console.log('transfersOut=',transfersOut);
-        // 按区块号排序所有交易
-        const allTransfers = [...transfersIn, ...transfersOut]
-          .sort((a, b) => a.blockNumber - b.blockNumber);
-       // console.log('allTransfers=',allTransfers);
-        let balance = ethers.getBigInt(0);
-        let lastBlockNum = 0;
+      // 3. 对每个币处理交易记录
+      for (let i = 0; i < TokenAddresses.length; i++) {
+        const tokenAddress = TokenAddresses[i];
+        let allTransfers = [];
+        let fromBlock = lastBlockNumber;
+        
+        // 获取所有钱包的转账记录
+        while (fromBlock < currentBlock) {
+          const toBlock = Math.min(fromBlock + BLOCK_BATCH_SIZE, currentBlock);
+          
+          // 获取所有钱包的转入和转出记录
+          for (const wallet of wallets) {
+            console.log(`query transfer from block=${fromBlock} to block=${toBlock}`);
+            // 转入记录
+            const transfersIn = await provider.getLogs({
+              address: tokenAddress,
+              topics: [
+                ethers.id("Transfer(address,address,uint256)"),
+                null,
+                ethers.zeroPadValue(wallet.toLowerCase(), 32)
+              ],
+              fromBlock: fromBlock,
+              toBlock: toBlock
+            });
 
-        // 计算每次交易后的余额和持有时长
+            // 转出记录
+            const transfersOut = await provider.getLogs({
+              address: tokenAddress,
+              topics: [
+                ethers.id("Transfer(address,address,uint256)"),
+                ethers.zeroPadValue(wallet.toLowerCase(), 32),
+                null
+              ],
+              fromBlock: fromBlock,
+              toBlock: toBlock
+            });
+
+            allTransfers = [...allTransfers, ...transfersIn, ...transfersOut];
+          }
+          fromBlock = toBlock + 1;
+        }
+
+        // 4. 计算积分和更新余额
+        let currentBalance = ethers.parseUnits(String(initialBalances[i] || 0), 18);
+        let totalScore = initialScores[i] || 0;
+        
+        // 按区块号排序
+        allTransfers.sort((a, b) => a.blockNumber - b.blockNumber);
+        
+        let lastBlockNum = lastBlockNumber;
+        
+        // 处理每笔交易
         for (const transfer of allTransfers) {
+          // 计算持有时间的积分
           if (lastBlockNum > 0) {
-            // 计算这段时间的持有分数 (余额 * 区块数)
-            totalScore += Number(balance) * (transfer.blockNumber - lastBlockNum);
+            totalScore += Number(currentBalance) * (transfer.blockNumber - lastBlockNum) / 1e22;
           }
 
           const amount = ethers.getBigInt(transfer.data);
-          if (transfer.topics[2].toLowerCase() === ethers.zeroPadValue(wallet.toLowerCase(), 32)) {
-            // 转入
-            balance += amount;
-          } else {
-            // 转出
-            balance -= amount;
+          const toAddress = ethers.getAddress('0x' + transfer.topics[2].slice(26));
+          const fromAddress = ethers.getAddress('0x' + transfer.topics[1].slice(26));
+          
+          // 更新余额
+          if (wallets.some(w => w.toLowerCase() === toAddress.toLowerCase())) {
+            currentBalance += amount;
           }
+          if (wallets.some(w => w.toLowerCase() === fromAddress.toLowerCase())) {
+            currentBalance -= amount;
+          }
+          
           lastBlockNum = transfer.blockNumber;
         }
 
-        // 计算最后一次交易到当前的持有分数
-        if (lastBlockNum > 0 && balance > 0) {
-          totalScore += Number(balance) * (currentBlock - lastBlockNum);
+        // 计算最后一段时间的积分
+        if (lastBlockNum > 0 && currentBalance > 0) {
+          totalScore += Math.floor(Number(currentBalance) * (currentBlock - lastBlockNum) / 1e22);
         }
+        console.log(`totalScore=${totalScore}`);
+        // 5. 保存该币的最终积分和余额
+        newScores[i] = totalScore;
+        newBalances[i] = currentBalance;
       }
-      //和现有积分相加，得到最后的得分。
-      setHoldingScore(totalScore/1e22+userScore.lastCoinScore);
-      console.log('持有分数：', totalScore);
+
+      // 6. 更新数据库
+      const sqlstr = `
+        UPDATE ShowKolScore 
+        SET lastBlockNumber = ${currentBlock},
+            lastCoinScore = ${newScores[0]},
+            lastCoinBalance = ${ethers.formatUnits(newBalances[0], 18)},
+            lastCoinScore2 = ${newScores[1]},
+            lastCoinBalance2 = ${ethers.formatUnits(newBalances[1], 18)}
+        WHERE name = '${user}'
+      `;
+      await sendDbRequest(sqlstr);
+
+      // 更新本地状态
+      setUserScore(prev => ({
+        ...prev,
+        lastBlockNumber: currentBlock,
+        lastCoinScores: newScores,
+        lastCoinBalances: newBalances.map(balance => Number(ethers.formatUnits(balance, 18)))
+      }));
+
+      // 更新显示的积分
+      setHoldingScores(
+        TokenAddresses.reduce((obj, addr, index) => {
+          obj[addr] = newScores[index];
+          return obj;
+        }, {})
+      );
+
     } catch (error) {
       console.error('计算持有分数时出错:', error);
     }
@@ -365,15 +459,123 @@ export function UserProvider({ children }) {
   // 删除钱包的函数
   const removeWallet = async (wallet) => {
     try {
-      const sqlstr = `DELETE FROM ShowKolUsers WHERE wallet='${wallet}'`;
+      // 1. 先更新积分
+      await calculateHoldingScore(wallets, userScore.lastBlockNumber);
+      
+      // 2. 查询要删除钱包的代币余额
+      const provider = new ethers.JsonRpcProvider(ProviderUrl);
+      const removedBalances = [];
+      
+      for (const tokenAddress of TokenAddresses) {
+        const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+        const balance = await contract.balanceOf(wallet);
+        const decimals = await contract.decimals();
+        removedBalances.push(ethers.formatUnits(balance, decimals));
+      }
+      
+      // 3. 计算新的余额
+      const newBalances = userScore.lastCoinBalances.map((balance, index) => 
+        Math.max(0, balance - Number(removedBalances[index]))
+      );
+      
+      // 4. 更新数据库
+      const sqlstr = `
+        UPDATE ShowKolScore 
+        SET lastCoinBalance = ${newBalances[0]},
+            lastCoinBalance2 = ${newBalances[1]}
+      WHERE name = '${user}';
+      DELETE FROM ShowKolUsers 
+      WHERE wallet='${wallet}'
+    `;
       const response = await sendDbRequest(sqlstr);
+      
       if (response && response.success) {
+        // 5. 更新本地状态
         setWallets(wallets.filter(w => w !== wallet));
+        setUserScore(prev => ({
+          ...prev,
+          lastCoinBalances: newBalances
+        }));
+        return true;
       } else {
         console.error('删除钱包失败:', response.message);
+        return false;
       }
     } catch (error) {
       console.error('删除钱包时出错:', error);
+      return false;
+    }
+  };
+
+  // 添加新函数获取最新区块
+  const getLatestBlockNumber = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(ProviderUrl);
+      const blockNumber = await provider.getBlockNumber();
+      return blockNumber;
+    } catch (error) {
+      console.error('获取最新区块号失败:', error);
+      return null;
+    }
+  };
+
+  const appendWallet = async (address) => {
+    if (!user) {
+      console.warn('用户未登录Twitter,无法绑定钱包地址');
+      return false;
+    }
+
+    try {
+      // 1. 检查数据库中是否已经存在该钱包地址
+      let sqlstr = `select * from ShowKolUsers where wallet='${address}'`;
+      let result = await sendDbRequest(sqlstr);
+      
+      if (result && result.data && result.data.length === 0) {
+        // 2. 先更新现有积分
+        await calculateHoldingScore(wallets, userScore.lastBlockNumber);
+        
+        // 3. 查询新钱包的代币余额
+        const provider = new ethers.JsonRpcProvider(ProviderUrl);
+        const newWalletBalances = [];
+        
+        for (const tokenAddress of TokenAddresses) {
+          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+          const balance = await contract.balanceOf(address);
+          const decimals = await contract.decimals();
+          newWalletBalances.push(ethers.formatUnits(balance, decimals));
+        }
+        
+        // 4. 计算新的总余额
+        const updatedBalances = userScore.lastCoinBalances.map((balance, index) => 
+          balance + Number(newWalletBalances[index])
+        );
+        
+        // 5. 更新数据库
+        sqlstr = `
+          INSERT INTO ShowKolUsers VALUES ('${address}','${user}');
+          UPDATE ShowKolScore 
+          SET lastCoinBalance = ${updatedBalances[0]},
+              lastCoinBalance2 = ${updatedBalances[1]}
+          WHERE name = '${user}'
+        `;
+        await sendDbRequest(sqlstr);
+        
+        // 6. 更新本地状态
+        setWallets(prevWallets => ([...prevWallets, address]));
+        setUserScore(prev => ({
+          ...prev,
+          lastCoinBalances: updatedBalances
+        }));
+        
+        console.log(`钱包地址${address}已成功绑定到Twitter账号${user}`);
+        return true;
+      } else {
+        console.log('该钱包地址已存在');
+        return false;
+      }
+    } catch (error) {
+      console.error('绑定钱包地址失败:', error);
+      return false;
     }
   };
 
@@ -383,9 +585,9 @@ export function UserProvider({ children }) {
       setUser, 
       wallets, 
       setWallets, 
-      tokenBalance, 
-      tokenSymbol,
-      holdingScore,
+      tokenBalances, 
+      tokenSymbols,
+      holdingScores,
       userScore,
       setUserScore,
       removeWallet,
@@ -393,7 +595,9 @@ export function UserProvider({ children }) {
       generateInviteCode,
       fetchInviteCodes,
       invitedUsers,
-      fetchInvitedUsers
+      fetchInvitedUsers,
+      getLatestBlockNumber,
+      appendWallet
     }}>
       {children}
     </UserContext.Provider>

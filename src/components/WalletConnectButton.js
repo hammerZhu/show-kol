@@ -6,7 +6,7 @@ import { sendDbRequest } from '../myUtils.js'; // 假设这是您的数据库请
 function WalletConnectButton() {
   const [account, setAccount] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const { user, setUser, wallets, setWallets } = useUser(); // 获取用户信息
+  const { appendWallet } = useUser(); // 只需要引入 appendWallet 函数
 
   useEffect(() => {
     // 监听账号变化
@@ -73,28 +73,8 @@ function WalletConnectButton() {
       setAccount(address);
       console.log(`钱包已连接: ${address}`);
       console.log(`地址类型: ${typeof address}`);
-      console.log('user:',user);
-      // 将钱包地址与Twitter账号绑定并记录到数据库
-      if (user) {
-        try {
-          console.log(`将钱包地址${address}与Twitter账号${user}绑定`);
-          // 检查数据库中是否已经存在该钱包地址
-          let sqlstr = `select * from ShowKolUsers where wallet='${address}'`;
-          let result = await sendDbRequest(sqlstr);
-          if (result && result.data && result.data.length == 0) {
-            // 将钱包地址与Twitter账号绑定，增加到数据库。
-            sqlstr = `insert into ShowKolUsers values ('${address}','${user}')`;
-            await sendDbRequest(sqlstr);
-            console.log(`钱包地址${address}已成功绑定到Twitter账号${user}`);
-          }
-          // 更新用户状态
-          setWallets(prevWallet => ([...prevWallet, address]));
-        } catch (error) {
-          console.error('绑定钱包地址失败:', error);
-        }
-      } else {
-        console.warn('用户未登录Twitter,无法绑定钱包地址');
-      }
+      // 调用 context 中的 appendWallet 函数
+      await appendWallet(address);
     } catch (error) {
       console.error('用户拒绝连接或发生错误', error);
     }

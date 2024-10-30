@@ -50,7 +50,7 @@ function LoginTwitter({ onLoginSuccess }) {
 
         const data = await response.json();
 
-        console.log(`login twitter result=`);
+        console.log(`loginTwitter result=`);
         console.log(data);
         // 登录成功，把内容保存到localstorage中
         localStorage.setItem('twitterData', data.twitterData);
