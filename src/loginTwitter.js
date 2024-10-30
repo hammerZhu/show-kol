@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUser } from './contexts/UserContext';
 // 删除 axios 导入
 // import axios from 'axios';
 
@@ -13,6 +14,7 @@ function LoginTwitter({ onLoginSuccess }) {
   const navigate = useNavigate();
   const location = useLocation();
   const requestSentRef = useRef(false);
+  const {setUser} = useUser();
 
   useEffect(() => {
     const loginWithTwitter = async () => {
@@ -55,6 +57,7 @@ function LoginTwitter({ onLoginSuccess }) {
         // 登录成功，把内容保存到localstorage中
         localStorage.setItem('twitterData', data.twitterData);
         onLoginSuccess(data.userName);
+        setUser(data.userName);
         navigate('/');
       } catch (err) {
         setError('登录失败：' + err.message);
