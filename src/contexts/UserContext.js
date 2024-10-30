@@ -23,7 +23,7 @@ const TokenAddresses = [
 //0x4e9299467f723E190bd2B7e6339624382A786a3E 测试账号，21701002 测试首区块。
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
-  const [user, setUser] = useState('logan99962');//todo 发行版改成空串。
+  const [user, setUser] = useState('');//todo 发行版改成空串。
   const [wallets, setWallets] = useState([]);
   const [tokenBalances, setTokenBalances] = useState({});
   const [tokenSymbols, setTokenSymbols] = useState({});
