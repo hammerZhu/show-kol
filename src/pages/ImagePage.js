@@ -1,6 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 function ImagePage() {
+  const navigate = useNavigate();
+  const { user } = useUser();
+
+  const handleImageClick = () => {
+    if (user) {
+      navigate('/search');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-6xl w-full bg-gray-800 rounded-lg shadow-xl overflow-hidden">
@@ -10,7 +21,11 @@ function ImagePage() {
         </div>
         
         {/* 图片容器 */}
-        <div className="relative">
+        <div 
+          className="relative cursor-pointer" 
+          onClick={handleImageClick}
+          title={user ? "点击进入搜索页面" : ""}
+        >
           <img
             src="/images/web3Ecosystem.png"  // 确保将图片放在 public 目录下
             alt="Web3 Ecosystem"

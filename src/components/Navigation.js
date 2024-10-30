@@ -35,7 +35,7 @@ function Navigation() {
         {user ? (
           <div className="flex space-x-6">
             <Link
-              to="/"
+              to="/search"
               className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
             >
               <img
@@ -50,22 +50,11 @@ function Navigation() {
               className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
             >
               <img
-                src="/tweet-icon.svg"
+                src="/post-icon.svg"
                 alt="发推"
                 className="w-6 h-6 mr-2 filter invert"
               />
-              <span>Tweet</span>
-            </Link>
-            <Link
-              to="/search"
-              className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
-            >
-              <img
-                src="/search-icon.svg"
-                alt="搜索"
-                className="w-6 h-6 mr-2 filter invert"
-              />
-              <span>Search</span>
+              <span>Post</span>
             </Link>
             <Link
               to="/profile"

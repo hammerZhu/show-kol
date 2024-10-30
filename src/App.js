@@ -6,6 +6,7 @@ import LoginTwitter from './loginTwitter';
 import UserTweet from './UserTweet';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
+import ImagePage from './pages/ImagePage';
 import './App.css';
 import './index.css';
 
@@ -28,7 +29,8 @@ function AppContent() {
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<SearchPage />} />
+          <Route path="/" element={<ImagePage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/project/:name" element={<ProjectDetail />} />
           <Route path="/loginTwitter" element={<LoginTwitter />} />
           <Route path="/user-tweet" element={<UserTweet />} />

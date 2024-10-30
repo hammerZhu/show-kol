@@ -292,7 +292,7 @@ export function UserProvider({ children }) {
       // 1. 读取最新区块号
       const provider = new ethers.JsonRpcProvider(ProviderUrl);
       const currentBlock = await provider.getBlockNumber();
-      const BLOCK_BATCH_SIZE = 10000;
+      const BLOCK_BATCH_SIZE = 5000;
       
       // 2. 读取上次钱包的余额
       const initialBalances = userScore.lastCoinBalances;
@@ -467,10 +467,16 @@ export function UserProvider({ children }) {
       const removedBalances = [];
       
       for (const tokenAddress of TokenAddresses) {
-        const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-        const balance = await contract.balanceOf(wallet);
-        const decimals = await contract.decimals();
-        removedBalances.push(ethers.formatUnits(balance, decimals));
+        try {
+          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+          const balance = await contract.balanceOf(wallet);
+          const decimals = await contract.decimals();
+          removedBalances.push(ethers.formatUnits(balance, decimals));
+          console.log(`Token ${tokenAddress} balance for ${wallet}: ${balance.toString()}`);
+        } catch (error) {
+          console.warn(`获取代币 ${tokenAddress} 余额失败，使用 0 作为默认值:`, error);
+          removedBalances.push('0');
+        }
       }
       
       // 3. 计算新的余额
@@ -478,29 +484,39 @@ export function UserProvider({ children }) {
         Math.max(0, balance - Number(removedBalances[index]))
       );
       
-      // 4. 更新数据库
-      const sqlstr = `
+      // 4. 先更新余额
+      let sqlstr = `
         UPDATE ShowKolScore 
         SET lastCoinBalance = ${newBalances[0]},
             lastCoinBalance2 = ${newBalances[1]}
-      WHERE name = '${user}';
+      WHERE name = '${user}'
+    `;
+    let response = await sendDbRequest(sqlstr);
+    
+    if (!response || !response.success) {
+      console.error('更新余额失败:', response?.message);
+      return false;
+    }
+
+    // 5. 再删除钱包记录
+    sqlstr = `
       DELETE FROM ShowKolUsers 
       WHERE wallet='${wallet}'
     `;
-      const response = await sendDbRequest(sqlstr);
-      
-      if (response && response.success) {
-        // 5. 更新本地状态
-        setWallets(wallets.filter(w => w !== wallet));
-        setUserScore(prev => ({
-          ...prev,
-          lastCoinBalances: newBalances
-        }));
-        return true;
-      } else {
-        console.error('删除钱包失败:', response.message);
-        return false;
-      }
+    response = await sendDbRequest(sqlstr);
+    
+    if (response && response.success) {
+      // 6. 更新本地状态
+      setWallets(wallets.filter(w => w !== wallet));
+      setUserScore(prev => ({
+        ...prev,
+        lastCoinBalances: newBalances
+      }));
+      return true;
+    } else {
+      console.error('删除钱包失败:', response?.message);
+      return false;
+    }
     } catch (error) {
       console.error('删除钱包时出错:', error);
       return false;
@@ -524,6 +540,7 @@ export function UserProvider({ children }) {
       console.warn('用户未登录Twitter,无法绑定钱包地址');
       return false;
     }
+    console.log('appendWallet', address);
 
     try {
       // 1. 检查数据库中是否已经存在该钱包地址
@@ -531,6 +548,7 @@ export function UserProvider({ children }) {
       let result = await sendDbRequest(sqlstr);
       
       if (result && result.data && result.data.length === 0) {
+        console.log(`old wallets=${wallets}`);
         // 2. 先更新现有积分
         await calculateHoldingScore(wallets, userScore.lastBlockNumber);
         
@@ -539,10 +557,17 @@ export function UserProvider({ children }) {
         const newWalletBalances = [];
         
         for (const tokenAddress of TokenAddresses) {
-          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-          const balance = await contract.balanceOf(address);
-          const decimals = await contract.decimals();
-          newWalletBalances.push(ethers.formatUnits(balance, decimals));
+          try {
+            const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+            const balance = await contract.balanceOf(address);
+            // 余额为 0 时也是正常情况
+            console.log(`Token ${tokenAddress} balance for ${address}: ${balance.toString()}`);
+            const decimals = await contract.decimals();
+            newWalletBalances.push(ethers.formatUnits(balance, decimals));
+          } catch (error) {
+            console.warn(`获取代币 ${tokenAddress} 余额失败，使用 0 作为默认值:`, error);
+            newWalletBalances.push('0');
+          }
         }
         
         // 4. 计算新的总余额
@@ -552,7 +577,9 @@ export function UserProvider({ children }) {
         
         // 5. 更新数据库
         sqlstr = `
-          INSERT INTO ShowKolUsers VALUES ('${address}','${user}');
+          INSERT INTO ShowKolUsers VALUES ('${address}','${user}')`;
+        await sendDbRequest(sqlstr);
+        sqlstr = `
           UPDATE ShowKolScore 
           SET lastCoinBalance = ${updatedBalances[0]},
               lastCoinBalance2 = ${updatedBalances[1]}

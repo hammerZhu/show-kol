@@ -36,7 +36,7 @@ const TwitterLoginButton = ({ onSuccess, onFailure, onLogout, user }) => {
   };
 
   return (
-    <button onClick={handleClick} className="bg-purple-500 rounded-xl px-6 py-2 flex items-center">
+    <button onClick={handleClick} className="bg-red-500 rounded-xl px-8 py-2 flex items-center">
       <img src="/x_logo.png" alt="X Logo" className="w-6 h-6 mr-2" />
       {user  ? `@${user}` : 'login with twitter'}
     </button>

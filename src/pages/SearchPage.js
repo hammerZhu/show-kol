@@ -256,27 +256,57 @@ function SearchPage() {
 
   return (
     <>
-        <div className="mb-4 flex flex-col gap-2 bg-gray-700 rounded-lg p-4">
-            <label className="text-lg font-semibold mb-2">Tags</label>
-            <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                    <button
-                    key={tag}
-                    onClick={() => handleTagClick(tag)}
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        activeTags.includes(tag)
-                        ? 'bg-purple-600 text-gray-200'
-                        : 'bg-gray-600 text-gray-200 hover:bg-gray-600'
-                    } transition-colors duration-200`}
-                    >
-                    {tag}
-                    </button>
-                ))}
+      {/* 标签区域 */}
+      <div className="mb-4 flex flex-col gap-2 bg-gray-700 rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-lg font-semibold">Tags</label>
+          <div className="flex items-center gap-2">
+            {/* 显示当前搜索条件 */}
+            <div className="text-sm text-gray-400 mr-4">
+              {minScore || maxScore || minInfluence || maxInfluence ? (
+                <span>
+                  Score: {minScore || '0'}-{maxScore || '100'}, 
+                  Influence: {minInfluence || '0'}-{maxInfluence || '100'}
+                </span>
+              ) : (
+                <span>No filters applied</span>
+              )}
             </div>
+            {/* 搜索按钮 */}
+            <button
+              onClick={openSearchModal}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-500 transition-colors duration-200"
+            >
+              Search
+            </button>
+            <button
+              onClick={handleDefaultSearch}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors duration-200"
+            >
+              Reset
+            </button>
+          </div>
         </div>
-        {renderSearchModal()}
-        {renderTable(filteredData, handleSort, sortField, sortDirection)}
-        {renderPagination(totalPages, currentPage, paginate)}
+        <div className="flex flex-wrap gap-2">
+          {tags.map(tag => (
+            <button
+              key={tag}
+              onClick={() => handleTagClick(tag)}
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                activeTags.includes(tag)
+                  ? 'bg-purple-600 text-gray-200'
+                  : 'bg-gray-600 text-gray-200 hover:bg-gray-600'
+              } transition-colors duration-200`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {renderSearchModal()}
+      {renderTable(filteredData, handleSort, sortField, sortDirection)}
+      {renderPagination(totalPages, currentPage, paginate)}
     </>
   );
 }
