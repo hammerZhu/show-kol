@@ -15,7 +15,7 @@ const ERC20_ABI = [
 //根据实际需要来配置。注意最后区块需要加大，服务器只能保持一小段时间的区块数据，必要的时候，需要用一个后台程序来刷新旧的区块。
 const START_BLOCK=21657962;
 const ProviderUrl='https://developer-access-mainnet.base.org';
-const TokenAddress='0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed';//degen token 
+const TokenAddress='0xc8862e713776eca8e6958c48d2bdce16b8b8035a';//1984 token 
 
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
@@ -29,13 +29,63 @@ export function UserProvider({ children }) {
     lastCoinScore: 0,
     lastBlockNumber: START_BLOCK,
     lastTweetScore: 0,
-    lastTweetId: ''
+    lastTweetId: '',
+    referrial: ''
   });//当前用户基准积分。
   const [isInitializing, setIsInitializing] = useState(false);
+  const [inviteCodes, setInviteCodes] = useState([]);
+  const [invitedUsers, setInvitedUsers] = useState([]);
 
   useEffect(() => {
     initUser();
   }, []);
+
+  // 生成新的邀请码
+  const generateInviteCode = async () => {
+    try {
+      // 生成12位随机邀请码
+      const randomCode = Math.random().toString(36).substring(2, 14).toUpperCase();
+      const sqlstr = `
+        INSERT INTO ShowKolInviteCodes (code, user) 
+        VALUES ('${randomCode}', '${user}')
+      `;
+      
+      const response = await sendDbRequest(sqlstr);
+      if (response && response.success) {
+        // 更新本地邀请码列表
+        setInviteCodes(prev => [...prev, randomCode]);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('生成邀请码失败:', error);
+      return false;
+    }
+  };
+
+  // 获取用户的所有邀请码
+  const fetchInviteCodes = async () => {
+    try {
+      const sqlstr = `SELECT code FROM ShowKolInviteCodes WHERE user = '${user}'`;
+      const response = await sendDbRequest(sqlstr);
+      
+      if (response && response.data) {
+        setInviteCodes(response.data.map(item => item.code));
+      }
+    } catch (error) {
+      console.error('获取邀请码失败:', error);
+    }
+  };
+
+  // 在用户登录后获取邀请码
+  useEffect(() => {
+    if (user) {
+      fetchInviteCodes();
+    } else {
+      setInviteCodes([]); // 用户登出时清空邀请码列表
+    }
+  }, [user]);
+
   // 获取用户分数记录的函数
   const fetchUserScore = async (username) => {
     try {
@@ -49,24 +99,56 @@ export function UserProvider({ children }) {
           lastCoinScore: scoreData.last_coin_score || 0,
           lastBlockNumber: scoreData.last_block_number || START_BLOCK,
           lastTweetScore: scoreData.last_tweet_score || 0,
-          lastTweetId: scoreData.last_tweet_id || ''
+          lastTweetId: scoreData.last_tweet_id || '',
+          referrial: scoreData.referrial || ''
         });
       } else {
         // 如果没有记录，创建新记录
+        let referrialValue = localStorage.getItem('referral');
+        let referrial = referrialValue?referrialValue:'';
         setUserScore({
           name: username,
           lastCoinScore: 0,
           lastBlockNumber: START_BLOCK,
           lastTweetScore: 0,
-          lastTweetId: ''
+          lastTweetId: '',
+          referrial: referrial
         });
-        let sqlstr = `INSERT INTO ShowKolScore (name, lastCoinScore, lastBlockNumber, lastTweetScore, lastTweetId) VALUES ('${username}', 0, 0, 0, '')`;
+        let sqlstr = `INSERT INTO ShowKolScore (name, lastCoinScore, lastBlockNumber, lastTweetScore, lastTweetId,referrial) VALUES ('${username}', 0, 0, 0, '', '${referrial}')`;
         await sendDbRequest(sqlstr);
       }
     } catch (error) {
       console.error('获取用户分数记录失败:', error);
     }
   };
+
+  // 获取当前用户邀请的所有用户
+  const fetchInvitedUsers = async () => {
+    try {
+      const sqlstr = `
+        SELECT s.name, s.lastCoinScore, s.lastTweetScore 
+        FROM ShowKolScore s 
+        JOIN ShowKolInviteCodes i ON s.referrial = i.code 
+        WHERE i.user = '${user}'
+      `;
+      
+      const response = await sendDbRequest(sqlstr);
+      if (response && response.data) {
+        setInvitedUsers(response.data);
+      }
+    } catch (error) {
+      console.error('获取邀请用户列表失败:', error);
+    }
+  };
+
+  // 在用户登录后获取邀请的用户列表
+  useEffect(() => {
+    if (user) {
+      fetchInvitedUsers();
+    } else {
+      setInvitedUsers([]); // 用户登出时清空列表
+    }
+  }, [user]);
 
   async function initUser(){
     if (isInitializing) return;
@@ -280,6 +362,21 @@ export function UserProvider({ children }) {
     }
   };
 
+  // 删除钱包的函数
+  const removeWallet = async (wallet) => {
+    try {
+      const sqlstr = `DELETE FROM ShowKolUsers WHERE wallet='${wallet}'`;
+      const response = await sendDbRequest(sqlstr);
+      if (response && response.success) {
+        setWallets(wallets.filter(w => w !== wallet));
+      } else {
+        console.error('删除钱包失败:', response.message);
+      }
+    } catch (error) {
+      console.error('删除钱包时出错:', error);
+    }
+  };
+
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -290,7 +387,13 @@ export function UserProvider({ children }) {
       tokenSymbol,
       holdingScore,
       userScore,
-      setUserScore
+      setUserScore,
+      removeWallet,
+      inviteCodes,
+      generateInviteCode,
+      fetchInviteCodes,
+      invitedUsers,
+      fetchInvitedUsers
     }}>
       {children}
     </UserContext.Provider>

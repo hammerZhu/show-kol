@@ -65,6 +65,19 @@ function UserTweet() {
     }
   };
 
+  // 处理发送特定推文
+  const handleSendTweet = (tweetContent) => {
+    const encodedContent = encodeURIComponent(tweetContent);
+    const twitterIntentURL = `https://twitter.com/intent/tweet?text=${encodedContent}`;
+    const link = document.createElement('a');
+    link.href = twitterIntentURL;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* 提示信息 */}
@@ -72,63 +85,39 @@ function UserTweet() {
         <p>提示：发推后将获得相应的积分奖励，请确保推文内容符合社区规范。</p>
       </div>
 
-      {/* 主要内容区域 */}
-      <div className="flex gap-6">
-        {/* 可发送推文表格 */}
-        <div className="w-1/3 bg-gray-700 rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-4 text-white">可发送推文</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-600">
-                  <th className="px-4 py-2 text-left text-white">标题</th>
-                  <th className="px-4 py-2 text-left text-white">截止时间</th>
-                </tr>
-              </thead>
-              <tbody>
-                {availableTweets.map((tweet, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-gray-600 hover:bg-gray-600 cursor-pointer"
-                    onClick={() => setTweetContent(tweet.content)}
-                  >
-                    <td className="px-4 py-2 text-white">{tweet.title}</td>
-                    <td className="px-4 py-2 text-white">
-                      {new Date(tweet.endTime).toLocaleDateString('zh-CN', {
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 文本输入区域 */}
-        <div className="w-2/3">
-          <div className="mb-8">
-            <textarea
-              value={tweetContent}
-              onChange={(e) => setTweetContent(e.target.value)}
-              className="w-full h-32 p-4 border rounded-lg bg-gray-700 text-white resize-none"
-              placeholder="请输入推文内容..."
-            />
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-gray-400">{280 - tweetContent.length} 字符剩余</span>
+      {/* 可发送推文卡片网格 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {availableTweets.map((tweet, index) => (
+          <div key={index} className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            {/* 卡片头部 - 截止时间 */}
+            <div className="bg-gray-700 px-4 py-2 flex justify-between items-center">
+              <span className="text-sm text-gray-300">截止时间</span>
+              <span className="text-sm text-gray-300">
+                {new Date(tweet.endTime).toLocaleDateString('zh-CN', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+            
+            {/* 推文内容 - 可滚动区域 */}
+            <div className="p-4 h-40 overflow-y-auto custom-scrollbar">
+              <p className="text-white whitespace-pre-wrap">{tweet.content}</p>
+            </div>
+            
+            {/* 卡片底部 - 发送按钮 */}
+            <div className="px-4 py-3 bg-gray-700">
               <button
-                onClick={handleTweetSubmit}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                disabled={!tweetContent.trim()}
+                onClick={() => handleSendTweet(tweet.title)}
+                className="w-full bg-purple-600 text-white rounded-lg py-2 px-4 hover:bg-purple-700 transition-colors duration-200"
               >
                 发送推文
               </button>
             </div>
           </div>
-        </div>
+        ))}
       </div>
 
       {/* 已发推文列表 */}
@@ -166,5 +155,31 @@ function UserTweet() {
     </div>
   );
 }
+
+// 添加自定义滚动条样式
+const styles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6B7280;
+  }
+`;
+
+// 将样式添加到 head
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 export default UserTweet;
