@@ -4,7 +4,6 @@ import { sendDbRequest } from '../myUtils';
 
 const UserContext = createContext();
 
-//todo 初始化的顺序需要确定好。
 
 // ERC20 代币的 ABI
 const ERC20_ABI = [
@@ -617,6 +616,7 @@ export function UserProvider({ children }) {
       holdingScores,
       userScore,
       setUserScore,
+      fetchUserScore,
       removeWallet,
       inviteCodes,
       generateInviteCode,

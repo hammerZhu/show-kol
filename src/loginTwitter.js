@@ -14,7 +14,7 @@ function LoginTwitter({ onLoginSuccess }) {
   const navigate = useNavigate();
   const location = useLocation();
   const requestSentRef = useRef(false);
-  const {setUser} = useUser();
+  const {setUser,fetchUserScore} = useUser();
 
   useEffect(() => {
     const loginWithTwitter = async () => {
@@ -60,6 +60,7 @@ function LoginTwitter({ onLoginSuccess }) {
           onLoginSuccess(data.userName);
         }
         setUser(data.userName);
+        await fetchUserScore(data.userName);
         navigate('/');
         console.log('loginTwitter success',data.userName);
       } catch (err) {
