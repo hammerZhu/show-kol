@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import TokenBalance from './TokenBalance';
 import PostScore from './PostScore';
 import TwitterLoginButton from './TwitterLoginButton';
@@ -7,6 +8,7 @@ import WalletConnectButton from './WalletConnectButton';
 import { useUser } from '../contexts/UserContext';
 
 function Navigation() {
+  const { t, i18n } = useTranslation();
   const { user, setUser } = useUser();
 
   const handleTwitterLoginSuccess = (response) => {
@@ -21,6 +23,11 @@ function Navigation() {
   const handleTwitterLogout = () => {
     localStorage.removeItem('twitterData');
     setUser(null);
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'zh' ? 'en' : 'zh';
+    i18n.changeLanguage(newLang);
   };
 
   return (
@@ -40,10 +47,10 @@ function Navigation() {
             >
               <img
                 src="/projects-icon.svg"
-                alt="重新搜索"
+                alt={t('nav.search')}
                 className="w-6 h-6 mr-2 filter invert"
               />
-              <span>All kols</span>
+              <span>{t('nav.allKols')}</span>
             </Link>
             <Link
               to="/user-tweet"
@@ -51,10 +58,10 @@ function Navigation() {
             >
               <img
                 src="/post-icon.svg"
-                alt="发推"
+                alt={t('nav.post')}
                 className="w-6 h-6 mr-2 filter invert"
               />
-              <span>Post</span>
+              <span>{t('nav.post')}</span>
             </Link>
             <Link
               to="/profile"
@@ -62,18 +69,24 @@ function Navigation() {
             >
               <img
                 src="/profile-icon.svg"
-                alt="个人资料"
+                alt={t('nav.profile')}
                 className="w-6 h-6 mr-2 filter invert"
               />
-              <span>Profile</span>
+              <span>{t('nav.profile')}</span>
             </Link>
           </div>
         ) : (
           <div className="text-gray-300">
-            请先用推特账号登录
+            {t('nav.pleaseLogin')}
           </div>
         )}
-        <div className="flex space-x-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={toggleLanguage}
+            className="px-3 py-1 rounded-lg bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+          >
+            {i18n.language === 'zh' ? 'English' : '中文'}
+          </button>
           {user && (
             <>
               <TokenBalance />

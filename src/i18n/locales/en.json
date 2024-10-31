@@ -1,0 +1,67 @@
+{
+  "common": {
+    "connectWallet": "Connect Wallet",
+    "search": "Search",
+    "send": "Send",
+    "score": "Score",
+    "inviteCode": "Invite Code"
+  },
+  "profile": {
+          "pleaseLogin": "Please login first",
+          "confirmDelete": "Are you sure to delete wallet",
+          "userInfo": {
+            "twitterId": "Twitter ID"
+          },
+          "scores": {
+            "tweetScore": "Tweet Score",
+            "lastTweet": "Last Tweet",
+            "noTweet": "None",
+            "tokenScore": "Token Score",
+            "lastBlock": "Last Block",
+            "noBlock": "None"
+          },
+          "wallet": {
+            "title": "Manage Connected Wallets"
+          },
+          "invite": {
+            "title": "Invite Friends",
+            "copySuccess": "Invite link copied!",
+            "copyFail": "Copy failed, please try again",
+            "generating": "Generating...",
+            "addCode": "Add Invite Code",
+            "clickToCopy": "Click invite code to copy link",
+            "noCodes": "No invite codes yet, click the button above to generate one!",
+            "invitedUsers": "My Invites",
+            "noInvites": "No invited users yet",
+            "tweetScore": "Tweet Score",
+            "tokenScore": "Token Score"
+          }
+        },
+  "tweet": {
+    "sendTweet": "Send Tweet",
+    "placeholder": "What's happening?"
+  },
+  "nav": {
+    "allKols": "All KOLs",
+    "post": "Post",
+    "profile": "Profile",
+    "search": "Search",
+    "pleaseLogin": "Please login with Twitter first"
+  },
+  "userTweet": {
+    "tip": "Note: You will receive corresponding score rewards after posting. Please ensure the tweet content complies with community guidelines.",
+    "deadline": "Deadline",
+    "sendTweet": "Send Tweet",
+    "postedTweets": "Posted Tweets",
+    "table": {
+      "date": "Date",
+      "tweetId": "Tweet ID",
+      "score": "Score"
+    },
+    "error": {
+      "popupBlocked": "Please allow browser popups to open Twitter",
+      "tweetFetchFailed": "Failed to fetch tweets",
+      "availableTweetsFetchFailed": "Failed to fetch available tweets"
+    }
+  }
+} 

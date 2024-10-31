@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Navigation from './components/Navigation';
 import ProjectDetail from './projectDetail';
 import LoginTwitter from './loginTwitter';
-import UserTweet from './UserTweet';
+import UserTweet from './pages/UserTweet';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
 import ImagePage from './pages/ImagePage';

@@ -1,0 +1,67 @@
+{
+  "common": {
+    "connectWallet": "连接钱包",
+    "search": "搜索",
+    "send": "发送",
+    "score": "积分",
+    "inviteCode": "邀请码"
+  },
+  "profile": {
+    "pleaseLogin": "请先登录",
+    "confirmDelete": "确定要删除钱包",
+    "userInfo": {
+      "twitterId": "推特 ID"
+    },
+    "scores": {
+      "tweetScore": "推文积分",
+      "lastTweet": "最后推文",
+      "noTweet": "暂无",
+      "tokenScore": "代币积分",
+      "lastBlock": "最后区块",
+      "noBlock": "暂无"
+    },
+    "wallet": {
+      "title": "管理已连接钱包"
+    },
+    "invite": {
+      "title": "邀请好友",
+      "copySuccess": "邀请链接已复制！",
+      "copyFail": "复制失败，请重试",
+      "generating": "生成中...",
+      "addCode": "添加邀请码",
+      "clickToCopy": "点击邀请码可复制链接",
+      "noCodes": "还没有邀请码，点击上方按钮生成一个吧！",
+      "invitedUsers": "我邀请的人",
+      "noInvites": "还没有邀请任何用户",
+      "tweetScore": "推文积分",
+      "tokenScore": "代币积分"
+    }
+  },
+  "tweet": {
+    "sendTweet": "发送推文",
+    "placeholder": "有什么新鲜事？"
+  },
+  "nav": {
+    "allKols": "所有KOL",
+    "post": "发推",
+    "profile": "个人资料",
+    "search": "搜索",
+    "pleaseLogin": "请先用推特账号登录"
+  },
+  "userTweet": {
+    "tip": "提示：发推后将获得相应的积分奖励，请确保推文内容符合社区规范。",
+    "deadline": "截止时间",
+    "sendTweet": "发送推文",
+    "postedTweets": "已发推文",
+    "table": {
+      "date": "日期",
+      "tweetId": "推文ID",
+      "score": "分数"
+    },
+    "error": {
+      "popupBlocked": "请允许浏览器弹窗以打开 Twitter",
+      "tweetFetchFailed": "获取推文失败",
+      "availableTweetsFetchFailed": "获取可发送推文失败"
+    }
+  }
+} 

@@ -96,7 +96,7 @@ function WalletConnectButton() {
     <>
       <div
         onClick={() => account ? disconnectWallet() : setShowModal(true)}
-        className="flex items-center bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded cursor-pointer rounded-xl">
+        className="flex items-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded cursor-pointer rounded-xl">
         <span className="mr-2">
           {/* 在这里插入图标 */}
         </span>

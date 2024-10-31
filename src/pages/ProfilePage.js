@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { useTranslation } from 'react-i18next';
 import WalletConnectButton from '../components/WalletConnectButton';
 
 function ProfilePage() {
-  const { user, userScore,wallets, removeWallet, inviteCodes, generateInviteCode, invitedUsers } = useUser();
+  const { t } = useTranslation();
+  const { user, userScore, wallets, removeWallet, inviteCodes, generateInviteCode, invitedUsers } = useUser();
   const [isGenerating, setIsGenerating] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
 
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">请先登录</div>
+        <div className="text-white text-xl">{t('profile.pleaseLogin')}</div>
       </div>
     );
   }
 
   const handleRemoveWallet = (wallet) => {
-    if (window.confirm(`确定要删除钱包 ${wallet} 吗？`)) {
+    if (window.confirm(`${t('profile.confirmDelete')} ${wallet} ?`)) {
       removeWallet(wallet);
     }
   };
@@ -33,7 +35,7 @@ function ProfilePage() {
     try {
       const success = await generateInviteCode();
       if (success) {
-        setCopyStatus('邀请码生成成功！');
+        setCopyStatus(t('profile.invite.copySuccess'));
         setTimeout(() => setCopyStatus(''), 3000);
       }
     } finally {
@@ -46,18 +48,17 @@ function ProfilePage() {
     const inviteLink = `${baseUrl}/?referral=${code}`;
     
     navigator.clipboard.writeText(inviteLink).then(() => {
-      setCopyStatus(`邀请链接已复制！`);
+      setCopyStatus(t('profile.invite.copySuccess'));
       setTimeout(() => setCopyStatus(''), 3000);
     }).catch(err => {
       console.error('复制失败:', err);
-      setCopyStatus('复制失败，请重试');
+      setCopyStatus(t('profile.invite.copyFail'));
       setTimeout(() => setCopyStatus(''), 3000);
     });
   };
-  let totalScore = 0;
- for(let i=0;i<userScore.lastCoinScores.length;i++){
-  totalScore += userScore.lastCoinScores[i];
- }
+
+  let totalScore = userScore.baseScore + userScore.ethScore;
+
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -65,14 +66,14 @@ function ProfilePage() {
         <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mb-8">
           <div className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="h-20 w-20 rounded-full bg-purple-600 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-red-500 flex items-center justify-center">
                 <span className="text-3xl text-white">
                   {user.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">{user}</h1>
-                <p className="text-gray-400">Twitter ID</p>
+                <p className="text-gray-400">{t('profile.userInfo.twitterId')}</p>
               </div>
             </div>
           </div>
@@ -84,14 +85,14 @@ function ProfilePage() {
           <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">推文积分</h2>
+                <h2 className="text-xl font-semibold text-white">{t('profile.scores.tweetScore')}</h2>
                 <img src="/images/twitter.png" alt="Tweet Score" className="h-8 w-8 filter invert" />
               </div>
-              <div className="text-3xl font-bold text-purple-500">
+              <div className="text-3xl font-bold text-red-500">
                 {userScore?.lastTweetScore || 0}
               </div>
               <p className="text-gray-400 mt-2">
-                最后推文: {userScore?.lastTweetId ?userScore.lastTweetId : '暂无'}
+                {t('profile.scores.lastTweet')}: {userScore?.lastTweetId || t('profile.scores.noTweet')}
               </p>
             </div>
           </div>
@@ -100,14 +101,14 @@ function ProfilePage() {
           <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">代币积分</h2>
+                <h2 className="text-xl font-semibold text-white">{t('profile.scores.tokenScore')}</h2>
                 <img src="/images/token.png" alt="Coin Score" className="h-8 w-8 filter invert" />
               </div>
-              <div className="text-3xl font-bold text-purple-500">
+              <div className="text-3xl font-bold text-red-500">
                 {totalScore}
               </div>
               <p className="text-gray-400 mt-2">
-                最后区块: {userScore?.lastBlockNumber || '暂无'}
+                {t('profile.scores.lastBlock')}: {userScore?.lastBlockNumber || t('profile.scores.noBlock')}
               </p>
             </div>
           </div>
@@ -116,14 +117,12 @@ function ProfilePage() {
         {/* 管理钱包部分 */}
         <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mt-8">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">管理已连接钱包</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('profile.wallet.title')}</h2>
             
-            {/* 直接使用 WalletConnectButton */}
             <div className="inline-block">
-              <WalletConnectButton className="bg-purple-600 text-white rounded-lg py-2 px-4 hover:bg-purple-700 transition-colors duration-200" />
+              <WalletConnectButton className="bg-red-500 text-white rounded-lg py-2 px-4 hover:bg-red-600 transition-colors duration-200" />
             </div>
 
-            {/* 已连接钱包列表 */}
             <ul className="flex flex-wrap gap-2 mt-4">
               {wallets.map((wallet, index) => (
                 <li key={index} className="flex items-center bg-gray-700 p-2 rounded-lg">
@@ -144,7 +143,7 @@ function ProfilePage() {
         <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mt-8">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-white">邀请好友</h2>
+              <h2 className="text-xl font-semibold text-white">{t('profile.invite.title')}</h2>
               {copyStatus && (
                 <div className="text-sm text-green-400 animate-fade-in">
                   {copyStatus}
@@ -152,19 +151,17 @@ function ProfilePage() {
               )}
             </div>
             
-            {/* 生成邀请码按钮和提示文字 */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleGenerateInviteCode}
                 disabled={isGenerating}
-                className="bg-purple-600 text-white rounded-lg py-2 px-4 hover:bg-purple-700 transition-colors duration-200 inline-block disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-red-500 text-white rounded-lg py-2 px-4 hover:bg-red-600 transition-colors duration-200 inline-block disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isGenerating ? '生成中...' : '添加邀请码'}
+                {isGenerating ? t('profile.invite.generating') : t('profile.invite.addCode')}
               </button>
-              <span className="text-gray-400 text-sm">点击邀请码可复制链接</span>
+              <span className="text-gray-400 text-sm">{t('profile.invite.clickToCopy')}</span>
             </div>
 
-            {/* 邀请码列表 */}
             <div className="mt-4 flex flex-wrap gap-2">
               {inviteCodes.map((code, index) => (
                 <div 
@@ -177,10 +174,9 @@ function ProfilePage() {
               ))}
             </div>
 
-            {/* 如果没有邀请码，显示提示 */}
             {inviteCodes.length === 0 && (
               <p className="text-gray-400 mt-4">
-                还没有邀请码，点击上方按钮生成一个吧！
+                {t('profile.invite.noCodes')}
               </p>
             )}
           </div>
@@ -189,7 +185,7 @@ function ProfilePage() {
         {/* 邀请的用户列表 */}
         <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mt-8">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">我邀请的人</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('profile.invite.invitedUsers')}</h2>
             
             {invitedUsers.length > 0 ? (
               <div className="space-y-4">
@@ -204,12 +200,12 @@ function ProfilePage() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-sm">
-                          <span className="text-gray-400">推文积分: </span>
-                          <span className="text-purple-400">{invitedUser.lastTweetScore}</span>
+                          <span className="text-gray-400">{t('profile.invite.tweetScore')}: </span>
+                          <span className="text-red-400">{invitedUser.lastTweetScore}</span>
                         </div>
                         <div className="text-sm">
-                          <span className="text-gray-400">代币积分: </span>
-                          <span className="text-purple-400">{invitedUser.lastCoinScore}</span>
+                          <span className="text-gray-400">{t('profile.invite.tokenScore')}: </span>
+                          <span className="text-red-400">{invitedUser.lastCoinScore}</span>
                         </div>
                       </div>
                     </div>
@@ -218,7 +214,7 @@ function ProfilePage() {
               </div>
             ) : (
               <div className="text-gray-400">
-                还没有邀请任何用户
+                {t('profile.invite.noInvites')}
               </div>
             )}
           </div>

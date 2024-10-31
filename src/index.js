@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { UserProvider } from './contexts/UserContext';
-
+import './i18n/config'; // 导入 i18n 配置
 // 添加IP检查函数
 async function checkUserRegion() {
   try {

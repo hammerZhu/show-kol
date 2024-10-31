@@ -22,7 +22,7 @@ const TokenAddresses = [
 //0x4e9299467f723E190bd2B7e6339624382A786a3E 测试账号，21701002 测试首区块。
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
-  const [user, setUser] = useState('');//todo 发行版改成空串。
+  const [user, setUser] = useState('genie8785');//todo 发行版改成空串。
   const [wallets, setWallets] = useState([]);
   const [tokenBalances, setTokenBalances] = useState({});
   const [tokenSymbols, setTokenSymbols] = useState({});
@@ -33,8 +33,8 @@ export function UserProvider({ children }) {
     lastTweetScore: 0,
     lastTweetId: '',
     referrial: '',
-    lastCoinScores: [],
-    lastCoinBalances: [],
+    baseScore: 0,
+    ethScore: 0
   });
   const [isInitializing, setIsInitializing] = useState(false);
   const [inviteCodes, setInviteCodes] = useState([]);
@@ -99,33 +99,19 @@ export function UserProvider({ children }) {
       if (response && response.data && response.data.length > 0) {
         const scoreData = response.data[0];
         
-        // 构建代币积分和余额数组
-        const scores = [];
-        const balances = [];
-        
-        // 处理现有的代币数据
-        scores[0] = scoreData.lastCoinScore || 0;
-        scores[1] = scoreData.lastCoinScore2 || 0;
-        balances[0] = scoreData.lastCoinBalance || 0.0;
-        balances[1] = scoreData.lastCoinBalance2 || 0.0;
-        
         setUserScore({
           name: scoreData.name,
           lastBlockNumber: scoreData.lastBlockNumber || START_BLOCK,
           lastTweetScore: scoreData.lastTweetScore || 0,
           lastTweetId: scoreData.lastTweetId || '',
           referrial: scoreData.referrial || '',
-          lastCoinScores: scores,
-          lastCoinBalances: balances
+          baseScore: 0,
+          ethScore:0
         });
       } else {
-        // 如果没有记录，创建新记录，新纪录没有钱包，所以blocknumber是0.
+        // 如果没有记录，创建新记录，新纪录没有钱包，所以blocknumber是最新的block.
         let referrialValue = localStorage.getItem('referral');
         let referrial = referrialValue ? referrialValue : '';
-        
-        // 初始化空数组，长度与代币数量相同
-        const initialScores = new Array(TokenAddresses.length).fill(0);
-        const initialBalances = new Array(TokenAddresses.length).fill(0.0);
         
         const newUserScore = {
           name: username,
@@ -133,19 +119,17 @@ export function UserProvider({ children }) {
           lastTweetScore: 0,
           lastTweetId: '',
           referrial: referrial,
-          lastCoinScores: initialScores,
-          lastCoinBalances: initialBalances
+          baseScore: 0,
+          ethScore: 0
         };
         setUserScore(newUserScore);
         
         // 构建 SQL 插入语句
         let sqlstr = `
           INSERT INTO ShowKolScore (
-            name, lastBlockNumber, lastTweetScore, lastTweetId, referrial, 
-            lastCoinScore, lastCoinBalance, lastCoinScore2, lastCoinBalance2
+            name,  lastTweetScore, lastTweetId, referrial
           ) VALUES (
-            '${username}', ${START_BLOCK}, 0, '', '${referrial}',
-            0, 0.0, 0, 0.0
+            '${username}', 0, '', '${referrial}'
           )`;
         await sendDbRequest(sqlstr);
       }
@@ -158,7 +142,7 @@ export function UserProvider({ children }) {
   const fetchInvitedUsers = async () => {
     try {
       const sqlstr = `
-        SELECT s.name, s.lastCoinScore, s.lastTweetScore 
+        SELECT s.name, s.lastTweetScore 
         FROM ShowKolScore s 
         JOIN ShowKolInviteCodes i ON s.referrial = i.code 
         WHERE i.user = '${user}'
@@ -240,9 +224,7 @@ export function UserProvider({ children }) {
         console.log('fetchWalletsAndBalance:', wallets);
         
         // 在成功获取钱包后调用其他函数
-        let lastBlockNumber = userScore.lastBlockNumber;
-        //todo await fetchWalletsAndBalance(wallets);
-        await calculateHoldingScore(wallets,lastBlockNumber);
+        await calculateBaseHoldingScore(wallets);
       } catch (error) {
         console.error('获取钱包信息时出错:', error);
       }
@@ -281,16 +263,31 @@ export function UserProvider({ children }) {
   }
 
   //查询币的交易记录，同步到最新积分上。
-  async function calculateHoldingScore(wallets, lastBlockNumber) {
-    if (!wallets.length) return;
+  /*async function calculateHoldingScore(wallets, lastBlockNumber) {
+    const provider = new ethers.JsonRpcProvider(ProviderUrl);
+    const currentBlock = await provider.getBlockNumber();
     //和上次的区块少于1000个，则不计算。
-    if(lastBlockNumber>0 && (await getLatestBlockNumber())-lastBlockNumber<1000){
+    if(lastBlockNumber>0 && currentBlock-lastBlockNumber<1000){
       return;
     }
+      //如果没有钱包，更新一下最新区块就好。
+    if (!wallets.length){
+        const sqlstr = `
+        UPDATE ShowKolScore 
+        SET lastBlockNumber = ${currentBlock}
+        WHERE name = '${user}'
+      `;
+      await sendDbRequest(sqlstr);
+
+      // 更新本地状态
+      setUserScore(prev => ({
+        ...prev,
+        lastBlockNumber: currentBlock
+      }));
+      return;
+    } 
     try {
       // 1. 读取最新区块号
-      const provider = new ethers.JsonRpcProvider(ProviderUrl);
-      const currentBlock = await provider.getBlockNumber();
       const BLOCK_BATCH_SIZE = 5000;
       
       // 2. 读取上次钱包的余额
@@ -414,7 +411,7 @@ export function UserProvider({ children }) {
       console.error('计算持有分数时出错:', error);
     }
   }
-
+*/
   // 更新推文分数的函数
   const updateTweetScore = async (user) => {
     try {
@@ -459,7 +456,7 @@ export function UserProvider({ children }) {
   const removeWallet = async (wallet) => {
     try {
       // 1. 先更新积分
-      await calculateHoldingScore(wallets, userScore.lastBlockNumber);
+      await calculateBaseHoldingScore(wallets);
       
       // 2. 查询要删除钱包的代币余额
       const provider = new ethers.JsonRpcProvider(ProviderUrl);
@@ -549,7 +546,7 @@ export function UserProvider({ children }) {
       if (result && result.data && result.data.length === 0) {
         console.log(`old wallets=${wallets}`);
         // 2. 先更新现有积分
-        await calculateHoldingScore(wallets, userScore.lastBlockNumber);
+        await calculateBaseHoldingScore(wallets);
         
         // 3. 查询新钱包的代币余额
         const provider = new ethers.JsonRpcProvider(ProviderUrl);
@@ -605,6 +602,83 @@ export function UserProvider({ children }) {
     }
   };
 
+  // 在 UserProvider 组件中添加新函数
+  async function calculateBaseHoldingScore(wallets) {
+    try {
+      // 1. 获取最大区块号作为截止区块
+      const sqlMaxBlock = `SELECT MAX(blockNumber) as maxBlock FROM ShowKolBaseTrades`;
+      const maxBlockResponse = await sendDbRequest(sqlMaxBlock);
+      const endBlock = maxBlockResponse.data[0].maxBlock;
+      
+      let totalScore = 0;
+      
+      // 2. 对每个钱包分别计算积分
+      for (const wallet of wallets) {
+        // 获取该钱包的所有交易记录并按区块排序
+        const sqlTrades = `
+          SELECT blockNumber, amount 
+          FROM ShowKolBaseTrades 
+          WHERE address = '${wallet.toLowerCase()}' 
+          ORDER BY blockNumber ASC
+        `;
+        const tradesResponse = await sendDbRequest(sqlTrades);
+        const trades = tradesResponse.data;
+        
+        if (!trades || trades.length === 0) continue;
+        
+        // 用于追踪每次买入的记录
+        let buyRecords = [];  // 格式: [{amount: number, block: number}]
+        
+        // 3. 处理每笔交易
+        for (const trade of trades) {
+          const { blockNumber, amount } = trade;
+          
+          if (amount > 0) {
+            // 买入操作：直接添加到买入记录
+            buyRecords.push({
+              amount: amount,
+              block: blockNumber
+            });
+          } else {
+            // 卖出操作：从最早的买入记录中扣除
+            let remainingSellAmount = -amount;
+            
+            while (remainingSellAmount > 0 && buyRecords.length > 0) {
+              const oldestBuy = buyRecords[0];
+              
+              if (oldestBuy.amount <= remainingSellAmount) {
+                // 完全卖出这笔买入
+                remainingSellAmount -= oldestBuy.amount;
+                buyRecords.shift();
+              } else {
+                // 部分卖出这笔买入
+                oldestBuy.amount -= remainingSellAmount;
+                remainingSellAmount = 0;
+              }
+            }
+          }
+        }
+        
+        // 4. 计算剩余买入记录的积分
+        for (const record of buyRecords) {
+          // 积分 = 数量 * (截止区块 - 买入区块)
+          const score = record.amount * (endBlock - record.block);
+          totalScore += score;
+        }
+      }
+      console.log('calculateBaseHoldingScore',totalScore);
+      setUserScore(prev => ({
+        ...prev,
+        baseScore: totalScore
+      }));
+      return totalScore;
+      
+    } catch (error) {
+      console.error('计算基础持币积分时出错:', error);
+      return 0;
+    }
+  }
+
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -624,7 +698,8 @@ export function UserProvider({ children }) {
       invitedUsers,
       fetchInvitedUsers,
       getLatestBlockNumber,
-      appendWallet
+      appendWallet,
+      calculateBaseHoldingScore
     }}>
       {children}
     </UserContext.Provider>

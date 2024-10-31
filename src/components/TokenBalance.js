@@ -8,9 +8,7 @@ function TokenBalance() {
     return null;
   }
   let totalScore = 0;
-  for(let i=0;i<userScore.lastCoinScores.length;i++){
-    totalScore += userScore.lastCoinScores[i];
-  }
+  totalScore = userScore.baseScore + userScore.ethScore;
  
   return (
     <div className="flex items-center">
