@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { sendDbRequest } from '../myUtils';
-
+import { BrowserProvider } from 'ethers';
 const UserContext = createContext();
 
 
@@ -22,7 +22,7 @@ const TokenAddresses = [
 //0x4e9299467f723E190bd2B7e6339624382A786a3E 测试账号，21701002 测试首区块。
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
-  const [user, setUser] = useState('');//todo 发行版改成空串。
+  const [user, setUser] = useState('solaak07');//todo 发行版改成空串。
   const [wallets, setWallets] = useState([]);
   const [tokenBalances, setTokenBalances] = useState({});
   const [tokenSymbols, setTokenSymbols] = useState({});
@@ -39,6 +39,7 @@ export function UserProvider({ children }) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [inviteCodes, setInviteCodes] = useState([]);
   const [invitedUsers, setInvitedUsers] = useState([]);
+  const [currentWallet, setCurrentWallet] = useState('');
 
   useEffect(() => {
     initUser();
@@ -108,6 +109,8 @@ export function UserProvider({ children }) {
           baseScore: 0,
           ethScore:0
         });
+        
+        
       } else {
         // 如果没有记录，创建新记录，新纪录没有钱包，所以blocknumber是最新的block.
         let referrialValue = localStorage.getItem('referral');
@@ -176,6 +179,8 @@ export function UserProvider({ children }) {
       if(user){
         await fetchUserScore(user);
         await fetchWallets();
+        // 尝试自动连接上次使用的钱包
+        await autoConnectWallet();
         await updateTweetScore(user);
       }
     }catch(error){
@@ -457,57 +462,16 @@ export function UserProvider({ children }) {
     try {
       // 1. 先更新积分
       await calculateBaseHoldingScore(wallets);
-      
-      // 2. 查询要删除钱包的代币余额
-      const provider = new ethers.JsonRpcProvider(ProviderUrl);
-      const removedBalances = [];
-      
-      for (const tokenAddress of TokenAddresses) {
-        try {
-          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-          const balance = await contract.balanceOf(wallet);
-          const decimals = await contract.decimals();
-          removedBalances.push(ethers.formatUnits(balance, decimals));
-          console.log(`Token ${tokenAddress} balance for ${wallet}: ${balance.toString()}`);
-        } catch (error) {
-          console.warn(`获取代币 ${tokenAddress} 余额失败，使用 0 作为默认值:`, error);
-          removedBalances.push('0');
-        }
-      }
-      
-      // 3. 计算新的余额
-      const newBalances = userScore.lastCoinBalances.map((balance, index) => 
-        Math.max(0, balance - Number(removedBalances[index]))
-      );
-      
-      // 4. 先更新余额
-      let sqlstr = `
-        UPDATE ShowKolScore 
-        SET lastCoinBalance = ${newBalances[0]},
-            lastCoinBalance2 = ${newBalances[1]}
-      WHERE name = '${user}'
-    `;
-    let response = await sendDbRequest(sqlstr);
-    
-    if (!response || !response.success) {
-      console.error('更新余额失败:', response?.message);
-      return false;
-    }
-
-    // 5. 再删除钱包记录
-    sqlstr = `
+     // 再删除钱包记录
+    let sqlstr = `
       DELETE FROM ShowKolUsers 
       WHERE wallet='${wallet}'
     `;
-    response = await sendDbRequest(sqlstr);
+    let response = await sendDbRequest(sqlstr);
     
     if (response && response.success) {
       // 6. 更新本地状态
       setWallets(wallets.filter(w => w !== wallet));
-      setUserScore(prev => ({
-        ...prev,
-        lastCoinBalances: newBalances
-      }));
       return true;
     } else {
       console.error('删除钱包失败:', response?.message);
@@ -537,7 +501,7 @@ export function UserProvider({ children }) {
       return false;
     }
     console.log('appendWallet', address);
-
+    address=address.toLowerCase();
     try {
       // 1. 检查数据库中是否已经存在该钱包地址
       let sqlstr = `select * from ShowKolUsers where wallet='${address}'`;
@@ -547,48 +511,13 @@ export function UserProvider({ children }) {
         console.log(`old wallets=${wallets}`);
         // 2. 先更新现有积分
         await calculateBaseHoldingScore(wallets);
-        
-        // 3. 查询新钱包的代币余额
-        const provider = new ethers.JsonRpcProvider(ProviderUrl);
-        const newWalletBalances = [];
-        
-        for (const tokenAddress of TokenAddresses) {
-          try {
-            const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-            const balance = await contract.balanceOf(address);
-            // 余额为 0 时也是正常情况
-            console.log(`Token ${tokenAddress} balance for ${address}: ${balance.toString()}`);
-            const decimals = await contract.decimals();
-            newWalletBalances.push(ethers.formatUnits(balance, decimals));
-          } catch (error) {
-            console.warn(`获取代币 ${tokenAddress} 余额失败，使用 0 作为默认值:`, error);
-            newWalletBalances.push('0');
-          }
+        //添加钱包到数据库
+        sqlstr = `INSERT INTO ShowKolUsers VALUES ('${address}','${user}')`;
+        await sendDbRequest(sqlstr);
+        // 更新本地状态
+        if(!wallets.includes(address)){
+          setWallets(prevWallets => ([...prevWallets, address]));
         }
-        
-        // 4. 计算新的总余额
-        const updatedBalances = userScore.lastCoinBalances.map((balance, index) => 
-          balance + Number(newWalletBalances[index])
-        );
-        
-        // 5. 更新数据库
-        sqlstr = `
-          INSERT INTO ShowKolUsers VALUES ('${address}','${user}')`;
-        await sendDbRequest(sqlstr);
-        sqlstr = `
-          UPDATE ShowKolScore 
-          SET lastCoinBalance = ${updatedBalances[0]},
-              lastCoinBalance2 = ${updatedBalances[1]}
-          WHERE name = '${user}'
-        `;
-        await sendDbRequest(sqlstr);
-        
-        // 6. 更新本地状态
-        setWallets(prevWallets => ([...prevWallets, address]));
-        setUserScore(prev => ({
-          ...prev,
-          lastCoinBalances: updatedBalances
-        }));
         
         console.log(`钱包地址${address}已成功绑定到Twitter账号${user}`);
         return true;
@@ -678,13 +607,77 @@ export function UserProvider({ children }) {
       return 0;
     }
   }
+  const connectWallet = async (walletType) => {
+  let provider;
+  switch (walletType) {
+    case 'metamask':
+      provider = window.ethereum;
+      if (!provider) {
+        alert('Please install or unlock Metamask!');
+        return;
+      }
+      break;
+    case 'phantom':
+      const isPhantomInstalled = window?.phantom?.ethereum?.isPhantom;
+      if(isPhantomInstalled){
+          provider = window.phantom.ethereum;
+      }
+      else{
+        alert('Please install or unlock Phantom wallet!');
+        return;
+      }
+      break;
+    case 'okx':
+      if (window.okxwallet) {
+        provider = window.okxwallet;
+      } else {
+        alert('Please install or unlock OKX wallet!');
+        return;
+      }
+      break;
+    default:
+      alert('not supported wallet type');
+      return;
+  }
+  let connectedAddress='';
+  try {
+    // 请求用户授权
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    // 创建 ethers 提供者
+    const ethersProvider = new BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    const address = await signer.getAddress();
+    connectedAddress=address;
+    console.log(`connectedWallet: ${address}`);
+    // 这里不调用appendWallet，因为连接事件处理函数已经调用了。
+    //await appendWallet(address);
 
+    // 设置当前钱包
+    setCurrentWallet(address);
+    // 保存钱包类型
+    localStorage.setItem('lastWalletType', walletType);
+    localStorage.setItem('lastConnectedWallet', address);
+
+  } catch (error) {
+    console.error('用户拒绝连接或发生错误', error);
+    setCurrentWallet('');
+  }
+  return connectedAddress;
+ }
+ // 添加自动连接钱包的函数
+const autoConnectWallet = async () => {
+  const lastWalletType = localStorage.getItem('lastWalletType');
+  if (lastWalletType) {
+    await connectWallet(lastWalletType);
+  }
+};
   return (
     <UserContext.Provider value={{ 
       user, 
       setUser, 
       wallets, 
       setWallets, 
+      currentWallet,
       tokenBalances, 
       tokenSymbols,
       holdingScores,
@@ -699,7 +692,8 @@ export function UserProvider({ children }) {
       fetchInvitedUsers,
       getLatestBlockNumber,
       appendWallet,
-      calculateBaseHoldingScore
+      calculateBaseHoldingScore,
+      connectWallet
     }}>
       {children}
     </UserContext.Provider>

@@ -6,13 +6,24 @@ import { sendDbRequest } from '../myUtils.js'; // 假设这是您的数据库请
 function WalletConnectButton() {
   const [account, setAccount] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const { appendWallet } = useUser(); // 只需要引入 appendWallet 函数
+  const { appendWallet, connectWallet,currentWallet } = useUser(); // 只需要引入 appendWallet 函数
+ // 添加新的 useEffect 来监听 currentWallet 的变化
+  useEffect(() => {
+    if (currentWallet) {
+      setAccount(currentWallet);
+    }
+  }, [currentWallet]);
 
   useEffect(() => {
+    // 初始化时如果有 currentWallet，直接设置
+    if (currentWallet) {
+      setAccount(currentWallet);
+    }
     // 监听账号变化
     const handleAccountsChanged = (accounts) => {
       if (accounts.length > 0) {
         setAccount(accounts[0]);
+        appendWallet(accounts[0]);//尝试添加新钱包
       } else {
         setAccount('');
       }
@@ -30,8 +41,8 @@ function WalletConnectButton() {
     };
   }, []);
 
-  const connectWallet = async (walletType) => {
-    let provider;
+  const tryConnectWallet = async (walletType) => {
+    /*let provider;
     switch (walletType) {
       case 'metamask':
         provider = window.ethereum;
@@ -71,12 +82,17 @@ function WalletConnectButton() {
       const signer = await ethersProvider.getSigner();
       const address = await signer.getAddress();
       setAccount(address);
-      console.log(`钱包已连接: ${address}`);
-      console.log(`地址类型: ${typeof address}`);
+      console.log(`connectedWallet: ${address}`);
       // 调用 context 中的 appendWallet 函数
       await appendWallet(address);
     } catch (error) {
       console.error('用户拒绝连接或发生错误', error);
+    }*/
+    const address=await connectWallet(walletType);
+    if(address){
+      setAccount(address);
+    }else{
+      alert('connect wallet failed');
     }
     setShowModal(false);
   };
@@ -110,19 +126,19 @@ function WalletConnectButton() {
           <div className="bg-gray-900 p-6 rounded-lg">
             <h2 className="text-xl font-bold mb-4">select a wallet</h2>
             <div className="flex flex-col gap-4">
-              <div onClick={() => connectWallet('metamask')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
+              <div onClick={() => tryConnectWallet('metamask')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
                 <span className="mr-2">
                   <img src="/images/metamask.webp" alt="Metamask" className="w-6 h-6" />
                 </span>
                 <span>Metamask</span>
               </div>
-              <div onClick={() => connectWallet('phantom')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
+              <div onClick={() => tryConnectWallet('phantom')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
                 <span className="mr-2">
                   <img src="/images/phantom.png" alt="Phantom" className="w-6 h-6" />
                 </span>
                 <span>Phantom</span>
               </div>
-              <div onClick={() => connectWallet('okx')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
+              <div onClick={() => tryConnectWallet('okx')} className="flex items-center bg-gray-700 text-white p-2 rounded cursor-pointer">
                 <span className="mr-2">
                   <img src="/images/okx_okb_logo.png" alt="OKX Wallet" className="w-6 h-6" />
                 </span>
