@@ -23,6 +23,7 @@ function WalletConnectButton() {
     const handleAccountsChanged = (accounts) => {
       if (accounts.length > 0) {
         setAccount(accounts[0]);
+        console.log('accountsChanged:',accounts[0]);
         appendWallet(accounts[0]);//尝试添加新钱包
       } else {
         setAccount('');

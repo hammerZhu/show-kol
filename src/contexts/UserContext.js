@@ -226,17 +226,19 @@ export function UserProvider({ children }) {
           wallets = response.data.map(item => item.wallet);
         }
         setWallets(wallets);
-        console.log('fetchWalletsAndBalance:', wallets);
         
-        // 在成功获取钱包后调用其他函数
-        await calculateBaseHoldingScore(wallets);
+        // 在成功获取钱包后计算两个链的积分
+        await Promise.all([
+          calculateBaseHoldingScore(wallets),
+          calculateEthHoldingScore(wallets)
+        ]);
       } catch (error) {
         console.error('获取钱包信息时出错:', error);
       }
     }
   }
   
-  async function fetchWalletsAndBalance(wallets) {
+ /* async function fetchWalletsAndBalance(wallets) {
     if (user) {
       try {
         const provider = new ethers.JsonRpcProvider(ProviderUrl);
@@ -266,157 +268,8 @@ export function UserProvider({ children }) {
       }
     }
   }
-
-  //查询币的交易记录，同步到最新积分上。
-  /*async function calculateHoldingScore(wallets, lastBlockNumber) {
-    const provider = new ethers.JsonRpcProvider(ProviderUrl);
-    const currentBlock = await provider.getBlockNumber();
-    //和上次的区块少于1000个，则不计算。
-    if(lastBlockNumber>0 && currentBlock-lastBlockNumber<1000){
-      return;
-    }
-      //如果没有钱包，更新一下最新区块就好。
-    if (!wallets.length){
-        const sqlstr = `
-        UPDATE ShowKolScore 
-        SET lastBlockNumber = ${currentBlock}
-        WHERE name = '${user}'
-      `;
-      await sendDbRequest(sqlstr);
-
-      // 更新本地状态
-      setUserScore(prev => ({
-        ...prev,
-        lastBlockNumber: currentBlock
-      }));
-      return;
-    } 
-    try {
-      // 1. 读取最新区块号
-      const BLOCK_BATCH_SIZE = 5000;
-      
-      // 2. 读取上次钱包的余额
-      const initialBalances = userScore.lastCoinBalances;
-      const initialScores = userScore.lastCoinScores;
-      const newBalances = [];
-      const newScores = [];
-
-      // 3. 对每个币处理交易记录
-      for (let i = 0; i < TokenAddresses.length; i++) {
-        const tokenAddress = TokenAddresses[i];
-        let allTransfers = [];
-        let fromBlock = lastBlockNumber;
-        
-        // 获取所有钱包的转账记录
-        while (fromBlock < currentBlock) {
-          const toBlock = Math.min(fromBlock + BLOCK_BATCH_SIZE, currentBlock);
-          
-          // 获取所有钱包的转入和转出记录
-          for (const wallet of wallets) {
-           // console.log(`query transfer from block=${fromBlock} to block=${toBlock}`);
-            // 转入记录
-            const transfersIn = await provider.getLogs({
-              address: tokenAddress,
-              topics: [
-                ethers.id("Transfer(address,address,uint256)"),
-                null,
-                ethers.zeroPadValue(wallet.toLowerCase(), 32)
-              ],
-              fromBlock: fromBlock,
-              toBlock: toBlock
-            });
-
-            // 转出记录
-            const transfersOut = await provider.getLogs({
-              address: tokenAddress,
-              topics: [
-                ethers.id("Transfer(address,address,uint256)"),
-                ethers.zeroPadValue(wallet.toLowerCase(), 32),
-                null
-              ],
-              fromBlock: fromBlock,
-              toBlock: toBlock
-            });
-
-            allTransfers = [...allTransfers, ...transfersIn, ...transfersOut];
-          }
-          fromBlock = toBlock + 1;
-        }
-
-        // 4. 计算积分和更新余额
-        let currentBalance = ethers.parseUnits(String(initialBalances[i] || 0), 18);
-        let totalScore = initialScores[i] || 0;
-        
-        // 按区块号排序
-        allTransfers.sort((a, b) => a.blockNumber - b.blockNumber);
-        
-        let lastBlockNum = lastBlockNumber;
-        
-        // 处理每笔交易
-        for (const transfer of allTransfers) {
-          // 计算持有时间的积分
-          if (lastBlockNum > 0) {
-            totalScore += Number(currentBalance) * (transfer.blockNumber - lastBlockNum) / 1e22;
-          }
-
-          const amount = ethers.getBigInt(transfer.data);
-          const toAddress = ethers.getAddress('0x' + transfer.topics[2].slice(26));
-          const fromAddress = ethers.getAddress('0x' + transfer.topics[1].slice(26));
-          
-          // 更新余额
-          if (wallets.some(w => w.toLowerCase() === toAddress.toLowerCase())) {
-            currentBalance += amount;
-          }
-          if (wallets.some(w => w.toLowerCase() === fromAddress.toLowerCase())) {
-            currentBalance -= amount;
-          }
-          
-          lastBlockNum = transfer.blockNumber;
-        }
-
-        // 计算最后一段时间的积分
-        if (lastBlockNum > 0 && currentBalance > 0) {
-          totalScore += Math.floor(Number(currentBalance) * (currentBlock - lastBlockNum) / 1e22);
-        }
-        console.log(`totalScore=${totalScore}`);
-        // 5. 保存该币的最终积分和余额
-        newScores[i] = totalScore;
-        newBalances[i] = currentBalance;
-      }
-
-      // 6. 更新数据库
-      const sqlstr = `
-        UPDATE ShowKolScore 
-        SET lastBlockNumber = ${currentBlock},
-            lastCoinScore = ${newScores[0]},
-            lastCoinBalance = ${ethers.formatUnits(newBalances[0], 18)},
-            lastCoinScore2 = ${newScores[1]},
-            lastCoinBalance2 = ${ethers.formatUnits(newBalances[1], 18)}
-        WHERE name = '${user}'
-      `;
-      await sendDbRequest(sqlstr);
-
-      // 更新本地状态
-      setUserScore(prev => ({
-        ...prev,
-        lastBlockNumber: currentBlock,
-        lastCoinScores: newScores,
-        lastCoinBalances: newBalances.map(balance => Number(ethers.formatUnits(balance, 18)))
-      }));
-
-      // 更新显示的积分
-      setHoldingScores(
-        TokenAddresses.reduce((obj, addr, index) => {
-          obj[addr] = newScores[index];
-          return obj;
-        }, {})
-      );
-
-    } catch (error) {
-      console.error('计算持有分数时出错:', error);
-    }
-  }
 */
+  
   // 更新推文分数的函数
   const updateTweetScore = async (user) => {
     try {
@@ -461,7 +314,10 @@ export function UserProvider({ children }) {
   const removeWallet = async (wallet) => {
     try {
       // 1. 先更新积分
-      await calculateBaseHoldingScore(wallets);
+      await Promise.all([
+        calculateBaseHoldingScore(wallets),
+        calculateEthHoldingScore(wallets)
+      ]);
      // 再删除钱包记录
     let sqlstr = `
       DELETE FROM ShowKolUsers 
@@ -506,18 +362,25 @@ export function UserProvider({ children }) {
       // 1. 检查数据库中是否已经存在该钱包地址
       let sqlstr = `select * from ShowKolUsers where wallet='${address}'`;
       let result = await sendDbRequest(sqlstr);
-      
+      console.log('appendWallet result=',result);
       if (result && result.data && result.data.length === 0) {
         console.log(`old wallets=${wallets}`);
         // 2. 先更新现有积分
-        await calculateBaseHoldingScore(wallets);
+        await Promise.all([
+          calculateBaseHoldingScore(wallets),
+          calculateEthHoldingScore(wallets)
+        ]);
         //添加钱包到数据库
         sqlstr = `INSERT INTO ShowKolUsers VALUES ('${address}','${user}')`;
         await sendDbRequest(sqlstr);
         // 更新本地状态
-        if(!wallets.includes(address)){
-          setWallets(prevWallets => ([...prevWallets, address]));
-        }
+        setWallets(prevWallets =>{
+            if(!prevWallets.includes(address)){
+              return [...prevWallets, address];
+            }else{
+              return prevWallets;
+            }
+         }); 
         
         console.log(`钱包地址${address}已成功绑定到Twitter账号${user}`);
         return true;
@@ -530,12 +393,88 @@ export function UserProvider({ children }) {
       return false;
     }
   };
+// 添加计算 Base 链积分的函数
+async function calculateBaseHoldingScore(wallets) {
+  try {
+    // 1. 获取最大区块号作为截止区块
+    const sqlMaxBlock = `SELECT MAX(blockNumber) as maxBlock FROM ShowKolBaseTrades`;
+    const maxBlockResponse = await sendDbRequest(sqlMaxBlock);
+    const endBlock = maxBlockResponse.data[0].maxBlock;
+    
+    let totalScore = 0;
+    
+    // 2. 对每个钱包分别计算积分
+    for (const wallet of wallets) {
+      // 获取该钱包的所有交易记录并按区块排序
+      const sqlTrades = `
+        SELECT blockNumber, amount 
+        FROM ShowKolBaseTrades 
+        WHERE address = '${wallet.toLowerCase()}' 
+        ORDER BY blockNumber ASC
+      `;
+      const tradesResponse = await sendDbRequest(sqlTrades);
+      const trades = tradesResponse.data;
+      
+      if (!trades || trades.length === 0) continue;
+      
+      // 用于追踪每次买入的记录
+      let buyRecords = [];  // 格式: [{amount: number, block: number}]
+      
+      // 3. 处理每笔交易
+      for (const trade of trades) {
+        const { blockNumber, amount } = trade;
+        
+        if (amount > 0) {
+          // 买入操作：直接添加到买入记录
+          buyRecords.push({
+            amount: amount,
+            block: blockNumber
+          });
+        } else {
+          // 卖出操作：从最早的买入记录中扣除
+          let remainingSellAmount = -amount;
+          
+          while (remainingSellAmount > 0 && buyRecords.length > 0) {
+            const oldestBuy = buyRecords[0];
+            
+            if (oldestBuy.amount <= remainingSellAmount) {
+              // 完全卖出这笔买入
+              remainingSellAmount -= oldestBuy.amount;
+              buyRecords.shift();
+            } else {
+              // 部分卖出这笔买入
+              oldestBuy.amount -= remainingSellAmount;
+              remainingSellAmount = 0;
+            }
+          }
+        }
+      }
+      
+      // 4. 计算剩余买入记录的积分
+      for (const record of buyRecords) {
+        // 积分 = 数量 * (截止区块 - 买入区块)
+        const score = record.amount * (endBlock - record.block);
+        totalScore += score;
+      }
+    }
+    console.log('calculateBaseHoldingScore', totalScore);
+    setUserScore(prev => ({
+      ...prev,
+      baseScore: totalScore
+    }));
+    return totalScore;
+    
+  } catch (error) {
+    console.error('计算 Base 链持币积分时出错:', error);
+    return 0;
+  }
+}
 
-  // 在 UserProvider 组件中添加新函数
-  async function calculateBaseHoldingScore(wallets) {
+  // 添加计算 ETH 链积分的函数
+  async function calculateEthHoldingScore(wallets) {
     try {
       // 1. 获取最大区块号作为截止区块
-      const sqlMaxBlock = `SELECT MAX(blockNumber) as maxBlock FROM ShowKolBaseTrades`;
+      const sqlMaxBlock = `SELECT MAX(blockNumber) as maxBlock FROM ShowKolEthTrades`;
       const maxBlockResponse = await sendDbRequest(sqlMaxBlock);
       const endBlock = maxBlockResponse.data[0].maxBlock;
       
@@ -546,7 +485,7 @@ export function UserProvider({ children }) {
         // 获取该钱包的所有交易记录并按区块排序
         const sqlTrades = `
           SELECT blockNumber, amount 
-          FROM ShowKolBaseTrades 
+          FROM ShowKolEthTrades 
           WHERE address = '${wallet.toLowerCase()}' 
           ORDER BY blockNumber ASC
         `;
@@ -595,18 +534,21 @@ export function UserProvider({ children }) {
           totalScore += score;
         }
       }
-      console.log('calculateBaseHoldingScore',totalScore);
+      console.log('calculateEthHoldingScore', totalScore);
       setUserScore(prev => ({
         ...prev,
-        baseScore: totalScore
+        ethScore: totalScore
       }));
       return totalScore;
       
     } catch (error) {
-      console.error('计算基础持币积分时出错:', error);
+      console.error('计算 ETH 链持币积分时出错:', error);
       return 0;
     }
   }
+
+
+  
   const connectWallet = async (walletType) => {
   let provider;
   switch (walletType) {
@@ -649,8 +591,7 @@ export function UserProvider({ children }) {
     const address = await signer.getAddress();
     connectedAddress=address;
     console.log(`connectedWallet: ${address}`);
-    // 这里不调用appendWallet，因为连接事件处理函数已经调用了。
-    //await appendWallet(address);
+    await appendWallet(address);
 
     // 设置当前钱包
     setCurrentWallet(address);
@@ -693,6 +634,7 @@ const autoConnectWallet = async () => {
       getLatestBlockNumber,
       appendWallet,
       calculateBaseHoldingScore,
+      calculateEthHoldingScore,
       connectWallet
     }}>
       {children}
