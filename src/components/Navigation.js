@@ -42,22 +42,11 @@ function Navigation() {
         {user ? (
           <div className="flex space-x-6">
             <Link
-              to="/search"
-              className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
-            >
-              <img
-                src="/projects-icon.svg"
-                alt={t('nav.search')}
-                className="w-6 h-6 mr-2 filter invert"
-              />
-              <span>{t('nav.allKols')}</span>
-            </Link>
-            <Link
               to="/user-tweet"
               className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
             >
               <img
-                src="/post-icon.svg"
+                src="/projects-icon.svg"
                 alt={t('nav.post')}
                 className="w-6 h-6 mr-2 filter invert"
               />

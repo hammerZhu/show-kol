@@ -102,14 +102,48 @@ function ProfilePage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-white">{t('profile.scores.tokenScore')}</h2>
-                <img src="/images/token.png" alt="Coin Score" className="h-8 w-8 filter invert" />
               </div>
-              <div className="text-3xl font-bold text-red-500">
+              
+              {/* 总积分 */}
+              <div className="text-3xl font-bold text-red-500 mb-6">
                 {totalScore}
               </div>
-              <p className="text-gray-400 mt-2">
-                {t('profile.scores.lastBlock')}: {userScore?.lastBlockNumber || t('profile.scores.noBlock')}
-              </p>
+              
+              {/* 分链显示积分 - 改为上下布局 */}
+              <div className="space-y-4">
+                {/* Base 链积分 */}
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 mr-4">
+                      <img 
+                        src="/images/base_token.png" 
+                        alt="Base Chain" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="text-xl font-semibold text-red-400">
+                      {userScore?.baseScore || 0}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* ETH 链积分 */}
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 mr-4">
+                      <img 
+                        src="/images/token.png" 
+                        alt="ETH Chain" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="text-xl font-semibold text-red-400">
+                        {userScore?.ethScore || 0}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
