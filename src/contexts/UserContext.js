@@ -22,7 +22,7 @@ const TokenAddresses = [
 //0x4e9299467f723E190bd2B7e6339624382A786a3E 测试账号，21701002 测试首区块。
 export function UserProvider({ children }) {
   // 在这里设置模拟的 user 值
-  const [user, setUser] = useState('');//todo 发行版改成空串。
+  const [user, setUser] = useState('');//todo发行版改成空串。
   const [wallets, setWallets] = useState([]);
   const [tokenBalances, setTokenBalances] = useState({});
   const [tokenSymbols, setTokenSymbols] = useState({});
@@ -172,16 +172,18 @@ export function UserProvider({ children }) {
   async function initUser(){
     if (isInitializing) return;
     setIsInitializing(true);
+    let loginedUser=user;
+    
     try{
       if (process.env.NODE_ENV === 'production') {
-        await verifyAuth();
+        loginedUser=await verifyAuth();
       }
-      if(user){
-        await fetchUserScore(user);
-        await fetchWallets();
+      if(loginedUser){
+        await fetchUserScore(loginedUser);
+        await fetchWallets(loginedUser);
         // 尝试自动连接上次使用的钱包
         await autoConnectWallet();
-        await updateTweetScore(user);
+        await updateTweetScore(loginedUser);
       }
     }catch(error){
       console.error('初始化用户时出错:', error);
@@ -209,15 +211,18 @@ export function UserProvider({ children }) {
             console.log(data);
             setUser(data);
             // 获取到用户名后立即获取分数记录
-            await fetchUserScore(data);
+           // await fetchUserScore(data);
+            return data;
           }
       }
     } catch (error) {
       console.error('验证失败:', error);
+      return '';
     }
+    return '';
   }
-  async function fetchWallets() {
-    if (user) {
+  async function fetchWallets(loginedUser) {
+    if (loginedUser) {
       try {
         let sqlstr = `select wallet from ShowKolUsers where name='${user}'`;
         const response = await sendDbRequest(sqlstr);
