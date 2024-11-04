@@ -58,7 +58,7 @@ function ProfilePage() {
   };
 
   let totalScore = userScore.baseScore + userScore.ethScore;
-
+  let tweetScore=userScore.lastTweetScore+userScore.invitedScore;
   return (
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -89,7 +89,7 @@ function ProfilePage() {
                 <img src="/images/twitter.png" alt="Tweet Score" className="h-8 w-8 filter invert" />
               </div>
               <div className="text-3xl font-bold text-red-500">
-                {userScore?.lastTweetScore || 0}
+                {tweetScore}
               </div>
               <p className="text-gray-400 mt-2">
                 {t('profile.scores.lastTweet')}: {userScore?.lastTweetId || t('profile.scores.noTweet')}

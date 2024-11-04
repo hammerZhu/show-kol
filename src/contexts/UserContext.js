@@ -34,7 +34,8 @@ export function UserProvider({ children }) {
     lastTweetId: '',
     referrial: '',
     baseScore: 0,
-    ethScore: 0
+    ethScore: 0,
+    invitedScore:0
   });
   const [isInitializing, setIsInitializing] = useState(false);
   const [inviteCodes, setInviteCodes] = useState([]);
@@ -44,6 +45,46 @@ export function UserProvider({ children }) {
   useEffect(() => {
     initUser();
   }, []);
+
+  useEffect(() => {
+    const calculateScores = async () => {
+      if (wallets.length > 0) {
+        try {
+          await Promise.all([
+            calculateBaseHoldingScore(wallets),
+            calculateEthHoldingScore(wallets)
+          ]);
+        } catch (error) {
+          console.error('计算积分时出错:', error);
+        }
+      }
+    };
+
+    calculateScores();
+  }, [wallets]); // 依赖于 wallets 数组
+
+// 在用户登录后获取邀请的用户列表
+useEffect(() => {
+  const fetchData = async () => {
+    if (user) {
+      await fetchWallets(user);
+      await fetchUserScore(user);
+      
+      // 尝试自动连接上次使用的钱包
+      await autoConnectWallet();
+      await updateTweetScore(user);
+      await fetchInvitedUsers();
+    } else {
+      setInvitedUsers([]); 
+    }
+  };
+
+  fetchData();
+}, [user]);
+
+
+
+
 
   // 生成新的邀请码
   const generateInviteCode = async () => {
@@ -82,15 +123,6 @@ export function UserProvider({ children }) {
     }
   };
 
-  // 在用户登录后获取邀请码
-  useEffect(() => {
-    if (user) {
-      fetchInviteCodes();
-    } else {
-      setInviteCodes([]); // 用户登出时清空邀请码列表
-    }
-  }, [user]);
-
   // 获取用户分数记录的函数
   const fetchUserScore = async (username) => {
     try {
@@ -107,7 +139,8 @@ export function UserProvider({ children }) {
           lastTweetId: scoreData.lastTweetId || '',
           referrial: scoreData.referrial || '',
           baseScore: 0,
-          ethScore:0
+          ethScore:0,
+          invitedScore:0
         });
         
         
@@ -123,7 +156,8 @@ export function UserProvider({ children }) {
           lastTweetId: '',
           referrial: referrial,
           baseScore: 0,
-          ethScore: 0
+          ethScore: 0,
+          invitedScore:0
         };
         setUserScore(newUserScore);
         
@@ -154,36 +188,31 @@ export function UserProvider({ children }) {
       const response = await sendDbRequest(sqlstr);
       if (response && response.data) {
         setInvitedUsers(response.data);
+        //更新积分
+        let invitedScore=response.data.length*10;
+        console.log('invitedScore=',invitedScore);
+        setUserScore(prev => ({
+          ...prev,
+          invitedScore: invitedScore
+        }));
       }
     } catch (error) {
       console.error('获取邀请用户列表失败:', error);
     }
   };
 
-  // 在用户登录后获取邀请的用户列表
-  useEffect(() => {
-    if (user) {
-      fetchInvitedUsers();
-    } else {
-      setInvitedUsers([]); // 用户登出时清空列表
-    }
-  }, [user]);
+  
 
   async function initUser(){
     if (isInitializing) return;
     setIsInitializing(true);
-    let loginedUser=user;
+    let loginedUser='';
     
     try{
       if (process.env.NODE_ENV === 'production') {
         loginedUser=await verifyAuth();
-      }
-      if(loginedUser){
-        await fetchUserScore(loginedUser);
-        await fetchWallets(loginedUser);
-        // 尝试自动连接上次使用的钱包
-        await autoConnectWallet();
-        await updateTweetScore(loginedUser);
+      }else{
+        setUser('solaak07');//todo
       }
     }catch(error){
       console.error('初始化用户时出错:', error);
@@ -231,12 +260,6 @@ export function UserProvider({ children }) {
           wallets = response.data.map(item => item.wallet);
         }
         setWallets(wallets);
-        
-        // 在成功获取钱包后计算两个链的积分
-        await Promise.all([
-          calculateBaseHoldingScore(wallets),
-          calculateEthHoldingScore(wallets)
-        ]);
       } catch (error) {
         console.error('获取钱包信息时出错:', error);
       }
@@ -306,6 +329,7 @@ export function UserProvider({ children }) {
           lastTweetScore: newScore,
           lastTweetId: latestTid
         }));
+        console.log(`更新推文分数成功，新分数=${newScore}`);
       }
       
 
@@ -318,13 +342,8 @@ export function UserProvider({ children }) {
   // 删除钱包的函数
   const removeWallet = async (wallet) => {
     try {
-      // 1. 先更新积分
-      await Promise.all([
-        calculateBaseHoldingScore(wallets),
-        calculateEthHoldingScore(wallets)
-      ]);
-     // 再删除钱包记录
-    let sqlstr = `
+      let newWallets=wallets.filter(w => w !== wallet);
+     let sqlstr = `
       DELETE FROM ShowKolUsers 
       WHERE wallet='${wallet}'
     `;
@@ -332,7 +351,7 @@ export function UserProvider({ children }) {
     
     if (response && response.success) {
       // 6. 更新本地状态
-      setWallets(wallets.filter(w => w !== wallet));
+      setWallets(newWallets);
       return true;
     } else {
       console.error('删除钱包失败:', response?.message);
@@ -370,11 +389,7 @@ export function UserProvider({ children }) {
       console.log('appendWallet result=',result);
       if (result && result.data && result.data.length === 0) {
         console.log(`old wallets=${wallets}`);
-        // 2. 先更新现有积分
-        await Promise.all([
-          calculateBaseHoldingScore(wallets),
-          calculateEthHoldingScore(wallets)
-        ]);
+        
         //添加钱包到数据库
         sqlstr = `INSERT INTO ShowKolUsers VALUES ('${address}','${user}')`;
         await sendDbRequest(sqlstr);
@@ -386,7 +401,6 @@ export function UserProvider({ children }) {
               return prevWallets;
             }
          }); 
-        
         console.log(`钱包地址${address}已成功绑定到Twitter账号${user}`);
         return true;
       } else {
