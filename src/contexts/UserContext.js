@@ -212,7 +212,8 @@ useEffect(() => {
       if (process.env.NODE_ENV === 'production') {
         loginedUser=await verifyAuth();
       }else{
-        setUser('solaak07');//todo
+       setUser('solaak07');
+      // setUser('');
       }
     }catch(error){
       console.error('初始化用户时出错:', error);

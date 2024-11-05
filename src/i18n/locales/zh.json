@@ -18,7 +18,9 @@
       "noTweet": "暂无",
       "tokenScore": "代币积分",
       "lastBlock": "最后区块",
-      "noBlock": "暂无"
+      "noBlock": "暂无",
+      "socialScore": "社交媒体积分",
+      "inviteScore": "邀请积分"
     },
     "wallet": {
       "title": "管理已连接钱包"
@@ -63,5 +65,11 @@
       "tweetFetchFailed": "获取推文失败",
       "availableTweetsFetchFailed": "获取可发送推文失败"
     }
+  },
+  "image": {
+    "enterInviteCode": "输入邀请码",
+    "inviteCodePlaceholder": "请输入邀请码",
+    "clickToSearch": "点击进入搜索页面",
+    "description": "Big brother is watching you."
   }
 } 

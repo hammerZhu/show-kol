@@ -18,7 +18,9 @@
             "noTweet": "None",
             "tokenScore": "Token Score",
             "lastBlock": "Last Block",
-            "noBlock": "None"
+            "noBlock": "None",
+            "socialScore": "Social Score",
+            "inviteScore": "Invite Score"
           },
           "wallet": {
             "title": "Manage Connected Wallets"
@@ -63,5 +65,11 @@
       "tweetFetchFailed": "Failed to fetch tweets",
       "availableTweetsFetchFailed": "Failed to fetch available tweets"
     }
+  },
+  "image": {
+    "enterInviteCode": "Enter Invite Code",
+    "inviteCodePlaceholder": "Please enter your invite code",
+    "clickToSearch": "Click to enter search page",
+    "description": "Big brother is watching you."
   }
 } 

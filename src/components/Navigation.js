@@ -23,6 +23,7 @@ function Navigation() {
   const handleTwitterLogout = () => {
     localStorage.removeItem('twitterData');
     setUser(null);
+    window.location.href = '/';
   };
 
   const toggleLanguage = () => {
@@ -82,12 +83,15 @@ function Navigation() {
               <PostScore />
             </>
           )}
-          <TwitterLoginButton
-            onSuccess={handleTwitterLoginSuccess}
-            onFailure={handleTwitterLoginFailure}
-            onLogout={handleTwitterLogout}
-            user={user}
-          />
+          {user && (
+             <TwitterLoginButton
+             onSuccess={handleTwitterLoginSuccess}
+             onFailure={handleTwitterLoginFailure}
+             onLogout={handleTwitterLogout}
+             user={user}
+            />
+          )}
+         
         </div>
       </nav>
     </header>

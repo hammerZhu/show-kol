@@ -81,19 +81,43 @@ function ProfilePage() {
 
         {/* 积分卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 推文积分卡片 */}
+          {/* 推文和邀请积分卡片 */}
           <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">{t('profile.scores.tweetScore')}</h2>
-                <img src="/images/twitter.png" alt="Tweet Score" className="h-8 w-8 filter invert" />
+                <h2 className="text-xl font-semibold text-white">{t('profile.scores.socialScore')}</h2>
+                
               </div>
+              
+              {/* 总社交积分 */}
               <div className="text-3xl font-bold text-red-500">
-                {tweetScore}
+                {(userScore?.lastTweetScore || 0) + (userScore?.invitedScore || 0)}
               </div>
-              <p className="text-gray-400 mt-2">
-                {t('profile.scores.lastTweet')}: {userScore?.lastTweetId || t('profile.scores.noTweet')}
-              </p>
+              
+              {/* 积分明细 */}
+              <div className="space-y-4 mt-4">
+                {/* 推文积分 */}
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <img src="/images/twitter.png" alt="Tweet Score" className="h-8 w-8 filter invert" />
+                    <div className="flex justify-between items-center flex-1 ml-3">
+                      <span className="text-gray-400 text-lg">{t('profile.scores.tweetScore')}</span>
+                      <span className="text-red-400 font-semibold text-xl">{userScore?.lastTweetScore || 0}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 邀请积分 */}
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <img src="/images/invite.jpg" alt="invite Score" className="h-8 w-8 filter invert" />
+                    <div className="flex justify-between items-center flex-1 ml-3">
+                      <span className="text-gray-400 text-lg">{t('profile.scores.inviteScore')}</span>
+                      <span className="text-red-400 font-semibold text-xl">{userScore?.invitedScore || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

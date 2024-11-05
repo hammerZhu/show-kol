@@ -61,7 +61,7 @@ function LoginTwitter({ onLoginSuccess }) {
         }
         setUser(data.userName);
         await fetchUserScore(data.userName);
-        navigate('/');
+        navigate('/user-tweet');
         console.log('loginTwitter success',data.userName);
       } catch (err) {
         setError('登录失败：' + err.message);
